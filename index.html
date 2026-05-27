@@ -127,6 +127,26 @@
     /* ── Avatar ── */
     .av { display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:50%; font-size:.68rem; font-weight:800; color:white; flex-shrink:0; }
     .name-cell { display:flex; align-items:center; gap:8px; }
+    .name-link { cursor:pointer; text-decoration:underline; text-decoration-color:#cbd5e1; text-underline-offset:2px; }
+    .name-link:hover { text-decoration-color:#6366f1; color:#6366f1; }
+
+    /* ── Candidate detail modal ── */
+    .modal-wide { width: 560px; }
+    .detail-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:18px; }
+    .detail-av { width:44px; height:44px; border-radius:50%; font-size:.95rem; font-weight:800; color:white; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .detail-name { font-size:1.05rem; font-weight:700; color:#1a2332; }
+    .detail-meta { font-size:.8rem; color:#64748b; margin-top:3px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    .close-btn { background:none; border:none; font-size:1.3rem; color:#94a3b8; cursor:pointer; padding:0 4px; line-height:1; }
+    .close-btn:hover { color:#1a2332; }
+    .d-section { font-size:.7rem; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:.07em; margin:16px 0 10px; padding-bottom:6px; border-bottom:1px solid #e2e8f0; }
+    .fb-entry { background:#f8fafc; border-radius:8px; padding:12px 14px; margin-bottom:8px; border:1px solid #e2e8f0; }
+    .fb-entry-head { display:flex; align-items:center; gap:8px; margin-bottom:6px; flex-wrap:wrap; }
+    .fb-meta { font-size:.75rem; color:#94a3b8; flex:1; }
+    .fb-del { background:none; border:none; color:#ef4444; cursor:pointer; font-size:.9rem; padding:0 3px; opacity:0; transition:opacity .15s; font-family:inherit; }
+    .fb-entry:hover .fb-del { opacity:1; }
+    .fb-text { font-size:.845rem; color:#334155; line-height:1.55; white-space:pre-wrap; }
+    .fb-empty { text-align:center; padding:20px; color:#cbd5e1; font-size:.85rem; }
+    .add-fb-form { background:#f8fafc; border-radius:8px; padding:14px; border:1px dashed #e2e8f0; margin-top:4px; }
 
     @media(max-width:900px){
       .kpi-grid { grid-template-columns:1fr 1fr; }
@@ -347,6 +367,45 @@
   </div>
 </div>
 
+<!-- Candidate Detail Modal -->
+<div class="overlay" id="m-detail">
+  <div class="modal modal-wide">
+    <div class="detail-top">
+      <div class="name-cell">
+        <div class="detail-av" id="d-av"></div>
+        <div>
+          <div class="detail-name" id="d-name"></div>
+          <div class="detail-meta" id="d-meta"></div>
+        </div>
+      </div>
+      <button class="close-btn" onclick="closeModals()">×</button>
+    </div>
+
+    <div class="d-section">Feedback History</div>
+    <div id="d-feedback-list"></div>
+
+    <div class="d-section">Add Feedback</div>
+    <div class="add-fb-form">
+      <div class="fg-row">
+        <div class="fg"><label>Round</label>
+          <select id="df-round">
+            <option selected>First Interview</option>
+            <option>2nd Interview</option>
+            <option>Final</option>
+            <option>AOB</option>
+          </select>
+        </div>
+        <div class="fg"><label>Interviewer</label><input id="df-int" type="text" placeholder="Name"></div>
+      </div>
+      <div class="fg"><label>Date</label><input id="df-date" type="date"></div>
+      <div class="fg"><label>Feedback</label><textarea id="df-text" placeholder="Notes, strengths, concerns…" style="min-height:70px"></textarea></div>
+      <div style="display:flex;justify-content:flex-end;margin-top:4px">
+        <button class="btn-save" onclick="addFeedbackEntry()">Add Feedback</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Interview Modal -->
 <div class="overlay" id="m-interview">
   <div class="modal">
@@ -540,7 +599,7 @@ function renderCandidates() {
       ? `<span class="badge cr-${roundKey}">${c.interviewRound}</span>`
       : '<span style="color:#cbd5e1">—</span>';
     tr.innerHTML = `
-      <td><div class="name-cell"><div class="av" style="background:${avColor(c.name)}">${initials(c.name)}</div><strong>${esc(c.name)}</strong></div></td>
+      <td><div class="name-cell"><div class="av" style="background:${avColor(c.name)}">${initials(c.name)}</div><strong class="name-link" onclick="openCandidateDetail('${c.id}')">${esc(c.name)}</strong></div></td>
       <td style="color:#64748b;font-size:.8rem">${esc(c.role)||'—'}</td>
       <td class="ed"><span class="badge s-${c.stage}">${c.stage}</span></td>
       <td class="ed">${roundBadge}</td>
@@ -591,6 +650,76 @@ function renderInterviews() {
   });
 }
 
+// ── Candidate detail modal ────────────────────────────
+let detailCandidateId = null;
+
+function openCandidateDetail(id) {
+  detailCandidateId = id;
+  const c = candidates.find(x => x.id === id);
+  if (!c) return;
+  document.getElementById('d-av').style.background = avColor(c.name);
+  document.getElementById('d-av').textContent = initials(c.name);
+  document.getElementById('d-name').textContent = c.name;
+  document.getElementById('d-meta').innerHTML =
+    `<span style="color:#64748b">${esc(c.role)||'No role specified'}</span>` +
+    (c.stage ? `<span class="badge s-${c.stage}">${c.stage}</span>` : '') +
+    (c.interviewRound ? `<span class="badge cr-${c.interviewRound.split(' ')[0]}">${c.interviewRound}</span>` : '');
+  document.getElementById('df-date').value = new Date().toISOString().slice(0,10);
+  document.getElementById('df-int').value = '';
+  document.getElementById('df-text').value = '';
+  renderFeedbackHistory(c);
+  closeModals();
+  document.getElementById('m-detail').classList.add('open');
+}
+
+function renderFeedbackHistory(c) {
+  const list = document.getElementById('d-feedback-list');
+  const history = c.feedbackHistory || [];
+  if (!history.length) {
+    list.innerHTML = '<div class="fb-empty">No feedback yet — add the first entry below</div>';
+    return;
+  }
+  const ROUND_KEY = r => (r||'').split(' ')[0];
+  list.innerHTML = history.map(f => `
+    <div class="fb-entry">
+      <div class="fb-entry-head">
+        <span class="badge cr-${ROUND_KEY(f.round)}">${f.round}</span>
+        <span class="fb-meta">${esc(f.interviewer)||'Unknown'} · ${f.date ? new Date(f.date+'T00:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : '—'}</span>
+        <button class="fb-del" onclick="deleteFeedbackEntry('${f.id}')">×</button>
+      </div>
+      <div class="fb-text">${esc(f.text)}</div>
+    </div>
+  `).join('');
+}
+
+function addFeedbackEntry() {
+  const text = document.getElementById('df-text').value.trim();
+  if (!text) { alert('Please enter some feedback.'); return; }
+  const c = candidates.find(x => x.id === detailCandidateId);
+  if (!c) return;
+  if (!c.feedbackHistory) c.feedbackHistory = [];
+  c.feedbackHistory.push({
+    id: uid(),
+    round:       document.getElementById('df-round').value,
+    interviewer: document.getElementById('df-int').value.trim(),
+    date:        document.getElementById('df-date').value,
+    text,
+  });
+  document.getElementById('df-text').value = '';
+  document.getElementById('df-int').value = '';
+  renderFeedbackHistory(c);
+  save();
+}
+
+function deleteFeedbackEntry(fid) {
+  if (!confirm('Remove this feedback entry?')) return;
+  const c = candidates.find(x => x.id === detailCandidateId);
+  if (!c) return;
+  c.feedbackHistory = (c.feedbackHistory||[]).filter(f => f.id !== fid);
+  renderFeedbackHistory(c);
+  save();
+}
+
 // ── Delete ─────────────────────────────────────────────
 function del(type, id) {
   if (!confirm('Remove this entry?')) return;
@@ -619,7 +748,7 @@ function saveRole() {
 function saveCandidate() {
   const name = document.getElementById('c-name').value.trim();
   if (!name) { alert('Please enter a candidate name.'); return; }
-  candidates.push({ id:uid(), name, role:document.getElementById('c-role').value.trim(), stage:document.getElementById('c-stage').value, interviewRound:document.getElementById('c-round').value, interviewer:document.getElementById('c-int').value.trim(), feedback:document.getElementById('c-feedback').value.trim() });
+  candidates.push({ id:uid(), name, role:document.getElementById('c-role').value.trim(), stage:document.getElementById('c-stage').value, interviewRound:document.getElementById('c-round').value, interviewer:document.getElementById('c-int').value.trim(), feedback:document.getElementById('c-feedback').value.trim(), feedbackHistory:[] });
   ['c-name','c-role','c-int','c-feedback'].forEach(id => document.getElementById(id).value='');
   document.getElementById('c-round').value='';
   closeModals(); save();
