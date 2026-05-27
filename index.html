@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recruitment Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f0f4f8; color: #1a2332; }
+
+    /* ── Header ── */
+    .header { background: #1a2332; color: white; padding: 18px 32px; display: flex; justify-content: space-between; align-items: center; }
+    .header h1 { font-size: 1.2rem; font-weight: 700; }
+    .header .sub { font-size: 0.78rem; color: rgba(255,255,255,0.4); margin-top: 2px; }
+    .header-actions { display: flex; gap: 8px; }
+
+    /* ── Buttons ── */
+    .btn { border: none; border-radius: 7px; padding: 7px 14px; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: opacity .15s; font-family: inherit; }
+    .btn:hover { opacity: .85; }
+    .btn-ghost { background: rgba(255,255,255,.1); color: white; border: 1px solid rgba(255,255,255,.2); }
+    .btn-primary { background: #6366f1; color: white; }
+    .btn-sm { padding: 5px 12px; font-size: 0.75rem; }
+
+    /* ── Layout ── */
+    .main { padding: 24px 32px; max-width: 1440px; margin: 0 auto; }
+
+    /* ── KPI grid ── */
+    .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 22px; }
+    .kpi { background: white; border-radius: 10px; padding: 18px 20px; border: 1px solid #e2e8f0; position: relative; overflow: hidden; }
+    .kpi::before { content:''; position:absolute; top:0;left:0;right:0;height:3px; border-radius:10px 10px 0 0; }
+    .kpi:nth-child(1)::before { background:#6366f1; }
+    .kpi:nth-child(2)::before { background:#3b82f6; }
+    .kpi:nth-child(3)::before { background:#10b981; }
+    .kpi:nth-child(4)::before { background:#f59e0b; }
+    .kpi-label { font-size: 0.7rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: .06em; }
+    .kpi-value { font-size: 2rem; font-weight: 800; color: #1a2332; margin: 6px 0 3px; line-height: 1; }
+    .kpi-sub { font-size: 0.72rem; color: #94a3b8; }
+
+    /* ── Two col ── */
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 22px; }
+    .card { background: white; border-radius: 10px; padding: 20px 22px; border: 1px solid #e2e8f0; }
+    .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .card-title { font-size: 0.8rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: .06em; }
+
+    /* ── Pipeline funnel ── */
+    .funnel { display: flex; align-items: stretch; }
+    .funnel-step { flex:1; text-align:center; padding:12px 6px 10px; border-radius:8px; }
+    .funnel-arrow { display:flex; align-items:center; color:#cbd5e1; font-size:.85rem; padding:0 2px; flex-shrink:0; }
+    .funnel-n { font-size:1.6rem; font-weight:800; color:white; }
+    .funnel-lbl { font-size:.65rem; font-weight:600; color:rgba(255,255,255,.8); text-transform:uppercase; letter-spacing:.05em; margin-top:2px; }
+
+    /* ── Table card ── */
+    .table-card { background: white; border-radius: 10px; border: 1px solid #e2e8f0; overflow: hidden; margin-bottom: 20px; }
+    .table-bar { display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; border-bottom: 1px solid #e2e8f0; }
+    .table-bar-title { font-size: .88rem; font-weight: 700; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: .845rem; }
+    thead th { text-align:left; padding:8px 14px 9px; font-size:.68rem; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:.07em; border-bottom:1px solid #e2e8f0; white-space:nowrap; background:#fafbfc; }
+    tbody td { padding:10px 14px; border-bottom:1px solid #f1f5f9; vertical-align:middle; }
+    tbody tr:last-child td { border-bottom:none; }
+    tbody tr:hover { background:#f8fafc; }
+    tbody tr:hover .row-del { opacity:1; }
+
+    /* ── Editable cells ── */
+    td.ed { cursor:pointer; }
+    td.ed:hover { background:#fef9ec !important; outline:1px solid #fcd34d; outline-offset:-1px; }
+    td.ed.editing { background:#fffbeb !important; outline:2px solid #f59e0b; outline-offset:-2px; padding:5px 10px; }
+    .cell-in, .cell-sel { width:100%; border:none; background:transparent; font:inherit; font-size:.845rem; color:#1a2332; outline:none; padding:2px 0; }
+    .cell-in[type=date] { width:140px; }
+
+    /* ── Badges ── */
+    .badge { display:inline-flex; align-items:center; padding:2px 9px; border-radius:99px; font-size:.68rem; font-weight:700; white-space:nowrap; }
+    .s-Applied      { background:#ede9fe; color:#5b21b6; }
+    .s-Screening    { background:#fef3c7; color:#92400e; }
+    .s-Interview    { background:#dbeafe; color:#1e40af; }
+    .s-Offer        { background:#d1fae5; color:#065f46; }
+    .s-Hired        { background:#dcfce7; color:#14532d; }
+    .s-Rejected     { background:#fee2e2; color:#991b1b; }
+    .st-Active      { background:#dbeafe; color:#1e40af; }
+    .st-Screening   { background:#fef3c7; color:#92400e; }
+    .st-Interviewing{ background:#e0e7ff; color:#3730a3; }
+    .st-Offer-Sent  { background:#d1fae5; color:#065f46; }
+    .st-Filled      { background:#dcfce7; color:#14532d; }
+    .st-On-Hold     { background:#f1f5f9; color:#475569; }
+    .st-Cancelled   { background:#fee2e2; color:#991b1b; }
+    .dot { width:7px; height:7px; border-radius:50%; display:inline-block; margin-right:5px; flex-shrink:0; }
+    .d-High { background:#ef4444; } .d-Medium { background:#f59e0b; } .d-Low { background:#22c55e; }
+    .dept { display:inline-block; padding:2px 8px; border-radius:5px; font-size:.72rem; font-weight:600; }
+    .r-1st      { background:#d1fae5; color:#065f46; }
+    .r-Technical{ background:#dbeafe; color:#1e40af; }
+    .r-Culture  { background:#fef3c7; color:#92400e; }
+    .r-Final    { background:#ede9fe; color:#5b21b6; }
+
+    /* ── Empty state ── */
+    .empty { text-align:center; padding:36px 20px; color:#94a3b8; }
+    .empty-icon { font-size:2rem; margin-bottom:8px; }
+    .empty p { font-size:.85rem; }
+
+    /* ── Delete btn ── */
+    .row-del { opacity:0; background:none; border:none; color:#ef4444; cursor:pointer; font-size:1.1rem; padding:2px 6px; border-radius:5px; transition:all .15s; font-family:inherit; }
+    .row-del:hover { background:#fee2e2; }
+
+    /* ── Toast ── */
+    .toast { position:fixed; bottom:20px; right:20px; background:#1a2332; color:white; padding:9px 16px; border-radius:8px; font-size:.82rem; font-weight:500; opacity:0; pointer-events:none; transition:opacity .25s; z-index:999; }
+    .toast.show { opacity:1; }
+
+    /* ── Modal ── */
+    .overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:100; align-items:center; justify-content:center; }
+    .overlay.open { display:flex; }
+    .modal { background:white; border-radius:14px; padding:26px 28px; width:480px; max-width:95vw; max-height:90vh; overflow-y:auto; }
+    .modal h2 { font-size:.95rem; font-weight:700; margin-bottom:18px; }
+    .fg { display:flex; flex-direction:column; gap:5px; margin-bottom:13px; }
+    .fg label { font-size:.7rem; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:.05em; }
+    .fg input, .fg select, .fg textarea { border:1px solid #e2e8f0; border-radius:7px; padding:8px 10px; font-size:.85rem; font-family:inherit; color:#1a2332; outline:none; }
+    .fg input:focus, .fg select:focus, .fg textarea:focus { border-color:#6366f1; }
+    .fg textarea { resize:vertical; min-height:56px; }
+    .fg-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .modal-foot { display:flex; gap:8px; justify-content:flex-end; margin-top:18px; }
+    .btn-cancel { background:#f1f5f9; color:#475569; border:none; border-radius:7px; padding:8px 16px; font-size:.85rem; font-weight:600; cursor:pointer; font-family:inherit; }
+    .btn-save { background:#6366f1; color:white; border:none; border-radius:7px; padding:8px 16px; font-size:.85rem; font-weight:600; cursor:pointer; font-family:inherit; }
+
+    /* ── Avatar ── */
+    .av { display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:50%; font-size:.68rem; font-weight:800; color:white; flex-shrink:0; }
+    .name-cell { display:flex; align-items:center; gap:8px; }
+
+    @media(max-width:900px){
+      .kpi-grid { grid-template-columns:1fr 1fr; }
+      .two-col { grid-template-columns:1fr; }
+      .main { padding:14px; }
+      .header { padding:14px 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="header">
+  <div>
+    <h1>Recruitment Dashboard</h1>
+    <div class="sub" id="hdr-date"></div>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-ghost" onclick="exportAll()">Export CSV</button>
+  </div>
+</header>
+
+<div class="main">
+
+  <!-- KPIs -->
+  <div class="kpi-grid">
+    <div class="kpi">
+      <div class="kpi-label">Open Roles</div>
+      <div class="kpi-value" id="k-roles">0</div>
+      <div class="kpi-sub" id="k-roles-sub">no roles added yet</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Active Candidates</div>
+      <div class="kpi-value" id="k-cands">0</div>
+      <div class="kpi-sub" id="k-cands-sub">in pipeline</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Interviews This Week</div>
+      <div class="kpi-value" id="k-int">0</div>
+      <div class="kpi-sub" id="k-int-sub">scheduled</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Roles Filled</div>
+      <div class="kpi-value" id="k-filled">0</div>
+      <div class="kpi-sub" id="k-filled-sub">this period</div>
+    </div>
+  </div>
+
+  <!-- Pipeline + Dept chart -->
+  <div class="two-col">
+    <div class="card">
+      <div class="card-header"><span class="card-title">Candidate Pipeline</span></div>
+      <div class="funnel" id="funnel"></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-title">Roles by Department</span></div>
+      <canvas id="deptChart" height="160"></canvas>
+    </div>
+  </div>
+
+  <!-- Open Roles table -->
+  <div class="table-card">
+    <div class="table-bar">
+      <span class="table-bar-title">Open Roles</span>
+      <button class="btn btn-primary btn-sm" onclick="openModal('role')">+ Add Role</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>Role</th><th>Department</th><th>Hiring Manager ✎</th>
+          <th>Target Start ✎</th><th>Priority ✎</th><th>Status ✎</th><th>Notes ✎</th><th></th>
+        </tr></thead>
+        <tbody id="roles-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Candidates + Interviews -->
+  <div class="two-col">
+    <div class="table-card">
+      <div class="table-bar">
+        <span class="table-bar-title">Candidates</span>
+        <button class="btn btn-primary btn-sm" onclick="openModal('candidate')">+ Add Candidate</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>Name</th><th>Role Applied</th><th>Stage ✎</th><th>Interviewer ✎</th><th>Notes ✎</th><th></th>
+          </tr></thead>
+          <tbody id="cands-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="table-card">
+      <div class="table-bar">
+        <span class="table-bar-title">Upcoming Interviews</span>
+        <button class="btn btn-primary btn-sm" onclick="openModal('interview')">+ Add Interview</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>Date ✎</th><th>Candidate</th><th>Role</th><th>Interviewer ✎</th><th>Round ✎</th><th></th>
+          </tr></thead>
+          <tbody id="ints-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Role Modal -->
+<div class="overlay" id="m-role">
+  <div class="modal">
+    <h2>Add Role</h2>
+    <div class="fg"><label>Role Title *</label><input id="r-title" type="text" placeholder="e.g. Senior Engineer"></div>
+    <div class="fg-row">
+      <div class="fg"><label>Department</label>
+        <select id="r-dept">
+          <option>Engineering</option><option>Product</option><option>Commercial</option>
+          <option>Marketing</option><option>Leadership</option><option>Finance</option>
+          <option>HR</option><option>Operations</option><option>Delivery</option><option>Other</option>
+        </select>
+      </div>
+      <div class="fg"><label>Hiring Manager</label><input id="r-hm" type="text" placeholder="Name"></div>
+    </div>
+    <div class="fg-row">
+      <div class="fg"><label>Target Start</label><input id="r-start" type="text" placeholder="e.g. Jul 2026"></div>
+      <div class="fg"><label>Priority</label>
+        <select id="r-pri"><option>High</option><option selected>Medium</option><option>Low</option></select>
+      </div>
+    </div>
+    <div class="fg"><label>Status</label>
+      <select id="r-status">
+        <option selected>Active</option><option>Screening</option><option>Interviewing</option>
+        <option>Offer Sent</option><option>Filled</option><option>On Hold</option><option>Cancelled</option>
+      </select>
+    </div>
+    <div class="fg"><label>Notes</label><textarea id="r-notes" placeholder="Any context or blockers…"></textarea></div>
+    <div class="modal-foot">
+      <button class="btn-cancel" onclick="closeModals()">Cancel</button>
+      <button class="btn-save" onclick="saveRole()">Add Role</button>
+    </div>
+  </div>
+</div>
+
+<!-- Candidate Modal -->
+<div class="overlay" id="m-candidate">
+  <div class="modal">
+    <h2>Add Candidate</h2>
+    <div class="fg"><label>Full Name *</label><input id="c-name" type="text" placeholder="e.g. Alex Johnson"></div>
+    <div class="fg-row">
+      <div class="fg"><label>Role Applied For</label><input id="c-role" type="text" placeholder="e.g. Product Manager"></div>
+      <div class="fg"><label>Stage</label>
+        <select id="c-stage">
+          <option selected>Applied</option><option>Screening</option><option>Interview</option>
+          <option>Offer</option><option>Hired</option><option>Rejected</option>
+        </select>
+      </div>
+    </div>
+    <div class="fg"><label>Interviewer / Owner</label><input id="c-int" type="text" placeholder="Name"></div>
+    <div class="fg"><label>Notes</label><textarea id="c-notes" placeholder="Strengths, concerns, links…"></textarea></div>
+    <div class="modal-foot">
+      <button class="btn-cancel" onclick="closeModals()">Cancel</button>
+      <button class="btn-save" onclick="saveCandidate()">Add Candidate</button>
+    </div>
+  </div>
+</div>
+
+<!-- Interview Modal -->
+<div class="overlay" id="m-interview">
+  <div class="modal">
+    <h2>Add Interview</h2>
+    <div class="fg"><label>Candidate Name *</label><input id="i-name" type="text" placeholder="e.g. Alex Johnson"></div>
+    <div class="fg-row">
+      <div class="fg"><label>Role</label><input id="i-role" type="text" placeholder="e.g. Product Manager"></div>
+      <div class="fg"><label>Date</label><input id="i-date" type="date"></div>
+    </div>
+    <div class="fg-row">
+      <div class="fg"><label>Interviewer</label><input id="i-int" type="text" placeholder="Name"></div>
+      <div class="fg"><label>Round</label>
+        <select id="i-round">
+          <option selected>1st Round</option><option>Technical</option><option>Culture</option><option>Final</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-cancel" onclick="closeModals()">Cancel</button>
+      <button class="btn-save" onclick="saveInterview()">Add Interview</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────
+let roles      = load('rec_roles',      []);
+let candidates = load('rec_candidates', []);
+let interviews = load('rec_interviews', []);
+let _id = Date.now();
+const uid = () => 'i' + (++_id);
+
+function load(key, def) {
+  try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : def; } catch(e) { return def; }
+}
+function save() {
+  localStorage.setItem('rec_roles',      JSON.stringify(roles));
+  localStorage.setItem('rec_candidates', JSON.stringify(candidates));
+  localStorage.setItem('rec_interviews', JSON.stringify(interviews));
+  toast('Saved');
+  refresh();
+}
+
+// Header date
+document.getElementById('hdr-date').textContent =
+  new Date().toLocaleDateString('en-GB', {day:'numeric', month:'long', year:'numeric'});
+
+// ── KPIs ──────────────────────────────────────────────
+function updateKPIs() {
+  const open    = roles.filter(r => !['Filled','Cancelled'].includes(r.status));
+  const active  = candidates.filter(c => !['Hired','Rejected'].includes(c.stage));
+  const filled  = roles.filter(r => r.status === 'Filled');
+  const now = new Date();
+  const mon = new Date(now); mon.setDate(now.getDate() - ((now.getDay()||7) - 1)); mon.setHours(0,0,0,0);
+  const sun = new Date(mon); sun.setDate(mon.getDate() + 6); sun.setHours(23,59,59,999);
+  const thisWeek = interviews.filter(i => { if(!i.date) return false; const d = new Date(i.date+'T00:00:00'); return d >= mon && d <= sun; });
+
+  document.getElementById('k-roles').textContent  = open.length;
+  document.getElementById('k-roles-sub').textContent = roles.length + ' total roles';
+  document.getElementById('k-cands').textContent  = active.length;
+  document.getElementById('k-cands-sub').textContent = candidates.length + ' total candidates';
+  document.getElementById('k-int').textContent    = thisWeek.length;
+  document.getElementById('k-int-sub').textContent = interviews.length + ' total scheduled';
+  document.getElementById('k-filled').textContent = filled.length;
+  document.getElementById('k-filled-sub').textContent = 'of ' + roles.length + ' roles';
+}
+
+// ── Pipeline funnel ────────────────────────────────────
+const STAGES = ['Applied','Screening','Interview','Offer','Hired'];
+const S_COLORS = ['#6366f1','#3b82f6','#0ea5e9','#10b981','#22c55e'];
+function updateFunnel() {
+  const counts = {};
+  STAGES.forEach(s => counts[s] = candidates.filter(c => c.stage === s).length);
+  document.getElementById('funnel').innerHTML = STAGES.map((s, i) =>
+    (i > 0 ? '<div class="funnel-arrow">›</div>' : '') +
+    `<div class="funnel-step" style="background:${S_COLORS[i]}">
+      <div class="funnel-n">${counts[s]}</div>
+      <div class="funnel-lbl">${s}</div>
+    </div>`
+  ).join('');
+}
+
+// ── Dept chart ─────────────────────────────────────────
+const D_COLORS = { Engineering:'#6366f1', Product:'#3b82f6', Commercial:'#f97316', Marketing:'#ec4899', Leadership:'#8b5cf6', Finance:'#10b981', HR:'#14b8a6', Operations:'#f59e0b', Delivery:'#06b6d4', Other:'#94a3b8' };
+let deptChart = null;
+function updateDeptChart() {
+  const counts = {};
+  roles.forEach(r => { counts[r.dept] = (counts[r.dept]||0) + 1; });
+  const labels = Object.keys(counts);
+  const vals   = labels.map(k => counts[k]);
+  const colors = labels.map(k => D_COLORS[k] || '#94a3b8');
+  if (deptChart) {
+    deptChart.data.labels = labels; deptChart.data.datasets[0].data = vals; deptChart.data.datasets[0].backgroundColor = colors; deptChart.update();
+  } else {
+    deptChart = new Chart(document.getElementById('deptChart'), {
+      type: 'doughnut',
+      data: { labels, datasets: [{ data: vals, backgroundColor: colors, borderWidth: 0, hoverOffset: 4 }] },
+      options: { responsive:true, plugins: { legend:{position:'right', labels:{font:{size:11},padding:12,usePointStyle:true,pointStyleWidth:8}}, tooltip:{callbacks:{label: ctx=>'  '+ctx.label+': '+ctx.parsed}} }, cutout:'62%' }
+    });
+  }
+}
+
+// ── Dept styling ───────────────────────────────────────
+const D_BG = { Engineering:'#e0e7ff', Product:'#dbeafe', Commercial:'#ffedd5', Marketing:'#fce7f3', Leadership:'#ede9fe', Finance:'#d1fae5', HR:'#ccfbf1', Operations:'#fef3c7', Delivery:'#e0f2fe', Other:'#f1f5f9' };
+const D_FG = { Engineering:'#3730a3', Product:'#1e40af', Commercial:'#9a3412', Marketing:'#9d174d', Leadership:'#5b21b6', Finance:'#065f46', HR:'#0f766e', Operations:'#92400e', Delivery:'#0369a1', Other:'#475569' };
+
+// ── Editable cell options ──────────────────────────────
+const OPTS = {
+  rstatus:  ['Active','Screening','Interviewing','Offer Sent','Filled','On Hold','Cancelled'],
+  priority: ['High','Medium','Low'],
+  cstage:   ['Applied','Screening','Interview','Offer','Hired','Rejected'],
+  round:    ['1st Round','Technical','Culture','Final'],
+};
+
+function wireEditable(tr, obj, cols) {
+  const tds = tr.querySelectorAll('td');
+  cols.forEach(({col, field, type}) => {
+    const td = tds[col];
+    if (!td) return;
+    td.addEventListener('click', function() {
+      if (td.classList.contains('editing')) return;
+      td.classList.add('editing');
+      const val = obj[field] || '';
+      let el;
+      if (OPTS[type]) {
+        el = document.createElement('select'); el.className = 'cell-sel';
+        OPTS[type].forEach(o => el.appendChild(new Option(o, o, false, o === val)));
+      } else if (type === 'date') {
+        el = document.createElement('input'); el.className = 'cell-in'; el.type = 'date'; el.value = val;
+      } else {
+        el = document.createElement('input'); el.className = 'cell-in'; el.type = 'text'; el.value = val;
+      }
+      td.innerHTML = ''; td.appendChild(el); el.focus();
+      if (el.tagName === 'INPUT' && el.type === 'text') el.select();
+      const commit = () => { obj[field] = el.value; td.classList.remove('editing'); save(); };
+      el.addEventListener('blur', commit);
+      el.addEventListener('keydown', e => { if(e.key==='Enter') el.blur(); });
+      if (OPTS[type]) el.addEventListener('change', () => el.blur());
+    });
+  });
+}
+
+// ── Roles table ────────────────────────────────────────
+function renderRoles() {
+  const body = document.getElementById('roles-body');
+  if (!roles.length) {
+    body.innerHTML = `<tr><td colspan="8"><div class="empty"><div class="empty-icon">📋</div><p>No roles added yet — click <strong>+ Add Role</strong> to get started</p></div></td></tr>`;
+    return;
+  }
+  body.innerHTML = '';
+  roles.forEach(r => {
+    const bg = D_BG[r.dept]||'#f1f5f9', fg = D_FG[r.dept]||'#475569';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><strong>${esc(r.title)}</strong></td>
+      <td><span class="dept" style="background:${bg};color:${fg}">${esc(r.dept)}</span></td>
+      <td class="ed">${esc(r.hm)||'<span style="color:#cbd5e1">—</span>'}</td>
+      <td class="ed">${esc(r.start)||'<span style="color:#cbd5e1">—</span>'}</td>
+      <td class="ed"><span class="dot d-${r.priority}"></span>${r.priority}</td>
+      <td class="ed"><span class="badge st-${(r.status||'').replace(' ','-')}">${r.status}</span></td>
+      <td class="ed" style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.notes)||'<span style="color:#cbd5e1">—</span>'}</td>
+      <td><button class="row-del" onclick="del('roles','${r.id}')">×</button></td>`;
+    wireEditable(tr, r, [
+      {col:2, field:'hm',       type:'text'},
+      {col:3, field:'start',    type:'text'},
+      {col:4, field:'priority', type:'priority'},
+      {col:5, field:'status',   type:'rstatus'},
+      {col:6, field:'notes',    type:'text'},
+    ]);
+    body.appendChild(tr);
+  });
+}
+
+// ── Candidates table ───────────────────────────────────
+const AV_COLORS = ['#6366f1','#3b82f6','#10b981','#f59e0b','#ec4899','#8b5cf6','#f97316','#06b6d4'];
+function avColor(n) { let h=0; for(let c of n) h=(c.charCodeAt(0)+h*31)&0xffffffff; return AV_COLORS[Math.abs(h)%AV_COLORS.length]; }
+function initials(n) { const p=n.trim().split(/\s+/); return ((p[0]||'')[0]||'').toUpperCase()+((p[1]||'')[0]||'').toUpperCase(); }
+
+function renderCandidates() {
+  const body = document.getElementById('cands-body');
+  if (!candidates.length) {
+    body.innerHTML = `<tr><td colspan="6"><div class="empty"><div class="empty-icon">👤</div><p>No candidates yet — click <strong>+ Add Candidate</strong></p></div></td></tr>`;
+    return;
+  }
+  body.innerHTML = '';
+  candidates.forEach(c => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><div class="name-cell"><div class="av" style="background:${avColor(c.name)}">${initials(c.name)}</div><strong>${esc(c.name)}</strong></div></td>
+      <td style="color:#64748b;font-size:.8rem">${esc(c.role)||'—'}</td>
+      <td class="ed"><span class="badge s-${c.stage}">${c.stage}</span></td>
+      <td class="ed">${esc(c.interviewer)||'<span style="color:#cbd5e1">—</span>'}</td>
+      <td class="ed" style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(c.notes)||'<span style="color:#cbd5e1">—</span>'}</td>
+      <td><button class="row-del" onclick="del('candidates','${c.id}')">×</button></td>`;
+    wireEditable(tr, c, [
+      {col:2, field:'stage',       type:'cstage'},
+      {col:3, field:'interviewer', type:'text'},
+      {col:4, field:'notes',       type:'text'},
+    ]);
+    body.appendChild(tr);
+  });
+}
+
+// ── Interviews table ───────────────────────────────────
+function fmtDate(d) {
+  if (!d) return '—';
+  return new Date(d+'T00:00:00').toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'});
+}
+
+function renderInterviews() {
+  const body = document.getElementById('ints-body');
+  const sorted = [...interviews].sort((a,b) => (a.date||'') < (b.date||'') ? -1 : 1);
+  if (!sorted.length) {
+    body.innerHTML = `<tr><td colspan="6"><div class="empty"><div class="empty-icon">📅</div><p>No interviews scheduled — click <strong>+ Add Interview</strong></p></div></td></tr>`;
+    return;
+  }
+  body.innerHTML = '';
+  const today = new Date().toISOString().slice(0,10);
+  sorted.forEach(i => {
+    const isToday = i.date === today;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="ed"><span style="font-weight:700;${isToday?'color:#6366f1':''}">${fmtDate(i.date)}</span></td>
+      <td><strong>${esc(i.name)}</strong></td>
+      <td style="color:#64748b;font-size:.8rem">${esc(i.role)||'—'}</td>
+      <td class="ed">${esc(i.interviewer)||'<span style="color:#cbd5e1">—</span>'}</td>
+      <td class="ed"><span class="badge r-${(i.round||'1st').split(' ')[0]}">${i.round}</span></td>
+      <td><button class="row-del" onclick="del('interviews','${i.id}')">×</button></td>`;
+    wireEditable(tr, i, [
+      {col:0, field:'date',        type:'date'},
+      {col:3, field:'interviewer', type:'text'},
+      {col:4, field:'round',       type:'round'},
+    ]);
+    body.appendChild(tr);
+  });
+}
+
+// ── Delete ─────────────────────────────────────────────
+function del(type, id) {
+  if (!confirm('Remove this entry?')) return;
+  if (type === 'roles')      roles      = roles.filter(r => r.id !== id);
+  if (type === 'candidates') candidates = candidates.filter(c => c.id !== id);
+  if (type === 'interviews') interviews = interviews.filter(i => i.id !== id);
+  save();
+}
+
+// ── Modals ─────────────────────────────────────────────
+function openModal(type) {
+  closeModals();
+  document.getElementById('m-'+type).classList.add('open');
+  setTimeout(() => document.querySelector('#m-'+type+' input[type=text]')?.focus(), 50);
+}
+function closeModals() { document.querySelectorAll('.overlay').forEach(o => o.classList.remove('open')); }
+document.querySelectorAll('.overlay').forEach(o => o.addEventListener('click', e => { if(e.target===o) closeModals(); }));
+
+function saveRole() {
+  const title = document.getElementById('r-title').value.trim();
+  if (!title) { alert('Please enter a role title.'); return; }
+  roles.push({ id:uid(), title, dept:document.getElementById('r-dept').value, hm:document.getElementById('r-hm').value.trim(), start:document.getElementById('r-start').value.trim(), priority:document.getElementById('r-pri').value, status:document.getElementById('r-status').value, notes:document.getElementById('r-notes').value.trim() });
+  ['r-title','r-hm','r-start','r-notes'].forEach(id => document.getElementById(id).value='');
+  closeModals(); save();
+}
+function saveCandidate() {
+  const name = document.getElementById('c-name').value.trim();
+  if (!name) { alert('Please enter a candidate name.'); return; }
+  candidates.push({ id:uid(), name, role:document.getElementById('c-role').value.trim(), stage:document.getElementById('c-stage').value, interviewer:document.getElementById('c-int').value.trim(), notes:document.getElementById('c-notes').value.trim() });
+  ['c-name','c-role','c-int','c-notes'].forEach(id => document.getElementById(id).value='');
+  closeModals(); save();
+}
+function saveInterview() {
+  const name = document.getElementById('i-name').value.trim();
+  if (!name) { alert('Please enter a candidate name.'); return; }
+  interviews.push({ id:uid(), name, role:document.getElementById('i-role').value.trim(), date:document.getElementById('i-date').value, interviewer:document.getElementById('i-int').value.trim(), round:document.getElementById('i-round').value });
+  ['i-name','i-role','i-date','i-int'].forEach(id => document.getElementById(id).value='');
+  closeModals(); save();
+}
+
+// ── Export ─────────────────────────────────────────────
+function exportAll() {
+  const q = v => '"'+(String(v||'').replace(/"/g,'""'))+'"';
+  const csv = [
+    'ROLES', 'Title,Department,Hiring Manager,Target Start,Priority,Status,Notes',
+    ...roles.map(r => [r.title,r.dept,r.hm,r.start,r.priority,r.status,r.notes].map(q).join(',')),
+    '', 'CANDIDATES', 'Name,Role Applied,Stage,Interviewer,Notes',
+    ...candidates.map(c => [c.name,c.role,c.stage,c.interviewer,c.notes].map(q).join(',')),
+    '', 'INTERVIEWS', 'Candidate,Role,Date,Interviewer,Round',
+    ...interviews.map(i => [i.name,i.role,i.date,i.interviewer,i.round].map(q).join(','))
+  ].join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
+  a.download = 'recruitment-' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
+}
+
+// ── Helpers ────────────────────────────────────────────
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+let _tt;
+function toast(msg) { const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(_tt); _tt=setTimeout(()=>t.classList.remove('show'),1600); }
+
+// ── Boot ───────────────────────────────────────────────
+function refresh() { updateKPIs(); updateFunnel(); updateDeptChart(); renderRoles(); renderCandidates(); renderInterviews(); }
+refresh();
+</script>
+</body>
+</html>
