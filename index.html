@@ -87,10 +87,10 @@
     .dot { width:7px; height:7px; border-radius:50%; display:inline-block; margin-right:5px; flex-shrink:0; }
     .d-High { background:#ef4444; } .d-Medium { background:#f59e0b; } .d-Low { background:#22c55e; }
     .dept { display:inline-block; padding:2px 8px; border-radius:5px; font-size:.72rem; font-weight:600; }
-    .r-1st      { background:#d1fae5; color:#065f46; }
-    .r-Technical{ background:#dbeafe; color:#1e40af; }
-    .r-Culture  { background:#fef3c7; color:#92400e; }
-    .r-Final    { background:#ede9fe; color:#5b21b6; }
+    .r-First    { background:#dbeafe; color:#1e40af; }
+    .r-2nd      { background:#e0e7ff; color:#3730a3; }
+    .r-Final    { background:#d1fae5; color:#065f46; }
+    .r-AOB      { background:#f1f5f9; color:#475569; }
     .cr-First   { background:#dbeafe; color:#1e40af; }
     .cr-2nd     { background:#e0e7ff; color:#3730a3; }
     .cr-Final   { background:#d1fae5; color:#065f46; }
@@ -449,7 +449,7 @@
       <div class="fg"><label>Interviewer</label><input id="i-int" type="text" placeholder="Name"></div>
       <div class="fg"><label>Round</label>
         <select id="i-round">
-          <option selected>1st Round</option><option>Technical</option><option>Culture</option><option>Final</option>
+          <option selected>First Interview</option><option>2nd Interview</option><option>Final</option><option>AOB</option>
         </select>
       </div>
     </div>
@@ -548,7 +548,7 @@ const OPTS = {
   priority: ['High','Medium','Low'],
   cstage:   ['Applied','Screening','Interview','Offer','Hired','Rejected'],
   iround:   ['First Interview','2nd Interview','Final','AOB'],
-  round:    ['1st Round','Technical','Culture','Final'],
+  round:    ['First Interview','2nd Interview','Final','AOB'],
 };
 
 function wireEditable(tr, obj, cols) {
@@ -701,7 +701,7 @@ function renderInterviews() {
       <td><strong>${esc(i.name)}</strong></td>
       <td style="color:#64748b;font-size:.8rem">${esc(i.role)||'—'}</td>
       <td class="ed">${esc(i.interviewer)||'<span style="color:#cbd5e1">—</span>'}</td>
-      <td class="ed"><span class="badge r-${(i.round||'1st').split(' ')[0]}">${i.round}</span></td>
+      <td class="ed"><span class="badge cr-${(i.round||'First').split(' ')[0]}">${i.round}</span></td>
       <td><button class="row-del" onclick="del('interviews','${i.id}')">×</button></td>`;
     wireEditable(tr, i, [
       {col:0, field:'date',        type:'date'},
