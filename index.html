@@ -127,8 +127,8 @@
     /* ── Avatar ── */
     .av { display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:50%; font-size:.68rem; font-weight:800; color:white; flex-shrink:0; }
     .name-cell { display:flex; align-items:center; gap:8px; }
-    .name-link { cursor:pointer; text-decoration:underline; text-decoration-color:#cbd5e1; text-underline-offset:2px; }
-    .name-link:hover { text-decoration-color:#6366f1; color:#6366f1; }
+    .view-btn { background:#f1f5f9; border:1px solid #e2e8f0; border-radius:6px; padding:4px 10px; font-size:.72rem; font-weight:600; color:#475569; cursor:pointer; white-space:nowrap; font-family:inherit; transition:all .15s; }
+    .view-btn:hover { background:#6366f1; color:white; border-color:#6366f1; }
 
     /* ── Candidate detail modal ── */
     .modal-wide { width: 560px; }
@@ -272,7 +272,7 @@
       <div class="table-wrap">
         <table>
           <thead><tr>
-            <th>Name</th><th>Role Applied</th><th>Stage ✎</th><th>Round ✎</th><th>Interviewer ✎</th><th>Feedback ✎</th><th></th>
+            <th>Name</th><th>Role Applied</th><th>Stage ✎</th><th>Round ✎</th><th>Interviewer ✎</th><th></th>
           </tr></thead>
           <tbody id="cands-body"></tbody>
         </table>
@@ -599,18 +599,19 @@ function renderCandidates() {
       ? `<span class="badge cr-${roundKey}">${c.interviewRound}</span>`
       : '<span style="color:#cbd5e1">—</span>';
     tr.innerHTML = `
-      <td><div class="name-cell"><div class="av" style="background:${avColor(c.name)}">${initials(c.name)}</div><strong class="name-link" onclick="openCandidateDetail('${c.id}')">${esc(c.name)}</strong></div></td>
+      <td><div class="name-cell"><div class="av" style="background:${avColor(c.name)}">${initials(c.name)}</div><strong>${esc(c.name)}</strong></div></td>
       <td style="color:#64748b;font-size:.8rem">${esc(c.role)||'—'}</td>
       <td class="ed"><span class="badge s-${c.stage}">${c.stage}</span></td>
       <td class="ed">${roundBadge}</td>
       <td class="ed">${esc(c.interviewer)||'<span style="color:#cbd5e1">—</span>'}</td>
-      <td class="ed" style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(c.feedback)}">${esc(c.feedback)||'<span style="color:#cbd5e1">—</span>'}</td>
-      <td><button class="row-del" onclick="del('candidates','${c.id}')">×</button></td>`;
+      <td style="white-space:nowrap">
+        <button class="view-btn" onclick="openCandidateDetail('${c.id}')">View / Feedback</button>
+        <button class="row-del" style="opacity:1;margin-left:4px" onclick="del('candidates','${c.id}')">×</button>
+      </td>`;
     wireEditable(tr, c, [
       {col:2, field:'stage',         type:'cstage'},
       {col:3, field:'interviewRound',type:'iround'},
       {col:4, field:'interviewer',   type:'text'},
-      {col:5, field:'feedback',      type:'text'},
     ]);
     body.appendChild(tr);
   });
