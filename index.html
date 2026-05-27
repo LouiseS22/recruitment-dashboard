@@ -127,18 +127,25 @@
     /* ── Avatar ── */
     .av { display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:50%; font-size:.68rem; font-weight:800; color:white; flex-shrink:0; }
     .name-cell { display:flex; align-items:center; gap:8px; }
-    .view-btn { background:#f1f5f9; border:1px solid #e2e8f0; border-radius:6px; padding:4px 10px; font-size:.72rem; font-weight:600; color:#475569; cursor:pointer; white-space:nowrap; font-family:inherit; transition:all .15s; }
-    .view-btn:hover { background:#6366f1; color:white; border-color:#6366f1; }
+    .view-btn { background:#6366f1; border:none; border-radius:6px; padding:5px 12px; font-size:.72rem; font-weight:700; color:white; cursor:pointer; white-space:nowrap; font-family:inherit; transition:all .15s; }
+    .view-btn:hover { background:#4f46e5; }
+    .fb-count { display:inline-block; background:#e0e7ff; color:#3730a3; border-radius:99px; padding:1px 7px; font-size:.65rem; font-weight:700; margin-top:2px; }
 
     /* ── Candidate detail modal ── */
-    .modal-wide { width: 560px; }
-    .detail-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:18px; }
-    .detail-av { width:44px; height:44px; border-radius:50%; font-size:.95rem; font-weight:800; color:white; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-    .detail-name { font-size:1.05rem; font-weight:700; color:#1a2332; }
-    .detail-meta { font-size:.8rem; color:#64748b; margin-top:3px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
-    .close-btn { background:none; border:none; font-size:1.3rem; color:#94a3b8; cursor:pointer; padding:0 4px; line-height:1; }
+    .modal-wide { width: 640px; }
+    .detail-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px; }
+    .detail-av { width:48px; height:48px; border-radius:50%; font-size:1rem; font-weight:800; color:white; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .detail-name { font-size:1.1rem; font-weight:700; color:#1a2332; }
+    .detail-meta { font-size:.8rem; color:#64748b; margin-top:4px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    .close-btn { background:none; border:none; font-size:1.4rem; color:#94a3b8; cursor:pointer; padding:0 4px; line-height:1; }
     .close-btn:hover { color:#1a2332; }
-    .d-section { font-size:.7rem; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:.07em; margin:16px 0 10px; padding-bottom:6px; border-bottom:1px solid #e2e8f0; }
+    .d-contact-bar { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:4px; }
+    .d-contact-link { display:inline-flex; align-items:center; gap:5px; padding:5px 11px; border-radius:6px; border:1px solid #e2e8f0; background:#f8fafc; font-size:.78rem; font-weight:600; color:#475569; text-decoration:none; cursor:pointer; font-family:inherit; transition:all .15s; }
+    .d-contact-link:hover { background:#e0e7ff; color:#3730a3; border-color:#a5b4fc; }
+    .d-contact-link.no-val { opacity:.4; cursor:default; pointer-events:none; }
+    .d-notes-area { width:100%; border:1px solid #e2e8f0; border-radius:8px; padding:10px 12px; font-size:.845rem; font-family:inherit; color:#1a2332; outline:none; resize:vertical; min-height:72px; line-height:1.55; }
+    .d-notes-area:focus { border-color:#6366f1; }
+    .d-section { font-size:.7rem; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:.07em; margin:18px 0 10px; padding-bottom:6px; border-bottom:1px solid #e2e8f0; }
     .fb-entry { background:#f8fafc; border-radius:8px; padding:12px 14px; margin-bottom:8px; border:1px solid #e2e8f0; }
     .fb-entry-head { display:flex; align-items:center; gap:8px; margin-bottom:6px; flex-wrap:wrap; }
     .fb-meta { font-size:.75rem; color:#94a3b8; flex:1; }
@@ -272,7 +279,7 @@
       <div class="table-wrap">
         <table>
           <thead><tr>
-            <th>Name</th><th>Role Applied</th><th>Stage ✎</th><th>Round ✎</th><th>Interviewer ✎</th><th></th>
+            <th>Name</th><th>Role Applied</th><th>Stage ✎</th><th>Round ✎</th><th>Interviewer ✎</th><th></th><th></th>
           </tr></thead>
           <tbody id="cands-body"></tbody>
         </table>
@@ -359,7 +366,15 @@
       </div>
       <div class="fg"><label>Interviewer / Owner</label><input id="c-int" type="text" placeholder="Name"></div>
     </div>
-    <div class="fg"><label>Feedback</label><textarea id="c-feedback" placeholder="Interview notes, strengths, concerns…"></textarea></div>
+    <div class="fg-row">
+      <div class="fg"><label>Email</label><input id="c-email" type="email" placeholder="email@domain.com"></div>
+      <div class="fg"><label>Phone</label><input id="c-phone" type="text" placeholder="+44 7700 000000"></div>
+    </div>
+    <div class="fg-row">
+      <div class="fg"><label>LinkedIn URL</label><input id="c-linkedin" type="text" placeholder="linkedin.com/in/name"></div>
+      <div class="fg"><label>CV / Resume Link</label><input id="c-cv" type="text" placeholder="Dropbox, Drive, etc."></div>
+    </div>
+    <div class="fg"><label>Notes</label><textarea id="c-feedback" placeholder="Interview notes, strengths, concerns…"></textarea></div>
     <div class="modal-foot">
       <button class="btn-cancel" onclick="closeModals()">Cancel</button>
       <button class="btn-save" onclick="saveCandidate()">Add Candidate</button>
@@ -370,8 +385,10 @@
 <!-- Candidate Detail Modal -->
 <div class="overlay" id="m-detail">
   <div class="modal modal-wide">
+
+    <!-- Header -->
     <div class="detail-top">
-      <div class="name-cell">
+      <div style="display:flex;align-items:center;gap:14px">
         <div class="detail-av" id="d-av"></div>
         <div>
           <div class="detail-name" id="d-name"></div>
@@ -381,10 +398,22 @@
       <button class="close-btn" onclick="closeModals()">×</button>
     </div>
 
-    <div class="d-section">Feedback History</div>
+    <!-- Contact / Links bar -->
+    <div class="d-contact-bar" id="d-contact-bar"></div>
+
+    <!-- Notes -->
+    <div class="d-section">Notes</div>
+    <textarea id="d-notes" class="d-notes-area" placeholder="Add notes about this candidate…"></textarea>
+    <div style="display:flex;justify-content:flex-end;margin-top:6px">
+      <button class="btn-save" style="font-size:.78rem;padding:6px 14px" onclick="saveCandidateNotes()">Save Notes</button>
+    </div>
+
+    <!-- Feedback history -->
+    <div class="d-section">Interview Feedback</div>
     <div id="d-feedback-list"></div>
 
-    <div class="d-section">Add Feedback</div>
+    <!-- Add feedback -->
+    <div class="d-section">Add Feedback Entry</div>
     <div class="add-fb-form">
       <div class="fg-row">
         <div class="fg"><label>Round</label>
@@ -398,11 +427,12 @@
         <div class="fg"><label>Interviewer</label><input id="df-int" type="text" placeholder="Name"></div>
       </div>
       <div class="fg"><label>Date</label><input id="df-date" type="date"></div>
-      <div class="fg"><label>Feedback</label><textarea id="df-text" placeholder="Notes, strengths, concerns…" style="min-height:70px"></textarea></div>
-      <div style="display:flex;justify-content:flex-end;margin-top:4px">
-        <button class="btn-save" onclick="addFeedbackEntry()">Add Feedback</button>
+      <div class="fg"><label>Feedback / Notes</label><textarea id="df-text" placeholder="Strengths, concerns, recommendation…" style="min-height:80px"></textarea></div>
+      <div style="display:flex;justify-content:flex-end;margin-top:6px">
+        <button class="btn-save" onclick="addFeedbackEntry()">Add Entry</button>
       </div>
     </div>
+
   </div>
 </div>
 
@@ -588,33 +618,44 @@ function initials(n) { const p=n.trim().split(/\s+/); return ((p[0]||'')[0]||'')
 function renderCandidates() {
   const body = document.getElementById('cands-body');
   if (!candidates.length) {
-    body.innerHTML = `<tr><td colspan="6"><div class="empty"><div class="empty-icon">👤</div><p>No candidates yet — click <strong>+ Add Candidate</strong></p></div></td></tr>`;
+    body.innerHTML = `<tr><td colspan="7"><div class="empty"><div class="empty-icon">👤</div><p>No candidates yet — click <strong>+ Add Candidate</strong></p></div></td></tr>`;
     return;
   }
   body.innerHTML = '';
   candidates.forEach(c => {
     const tr = document.createElement('tr');
     tr.style.cursor = 'pointer';
-    tr.title = 'Click to view profile & feedback';
+    tr.title = 'Click row to view profile';
 
     const roundKey = (c.interviewRound||'').split(' ')[0];
     const roundBadge = c.interviewRound
       ? `<span class="badge cr-${roundKey}">${c.interviewRound}</span>`
       : '<span style="color:#cbd5e1">—</span>';
     const feedbackCount = (c.feedbackHistory||[]).length;
-    const fbChip = feedbackCount > 0
-      ? `<span style="background:#e0e7ff;color:#3730a3;border-radius:99px;padding:1px 7px;font-size:.68rem;font-weight:700;margin-left:6px">${feedbackCount} note${feedbackCount>1?'s':''}</span>`
-      : '';
+    const fbBadge = feedbackCount > 0
+      ? `<span class="fb-count">${feedbackCount} note${feedbackCount>1?'s':''}</span>` : '';
 
     tr.innerHTML = `
-      <td><div class="name-cell"><div class="av" style="background:${avColor(c.name)}">${initials(c.name)}</div><span style="font-weight:600">${esc(c.name)}</span>${fbChip}</div></td>
+      <td>
+        <div class="name-cell">
+          <div class="av" style="background:${avColor(c.name)}">${initials(c.name)}</div>
+          <div><span style="font-weight:600;display:block">${esc(c.name)}</span>${fbBadge}</div>
+        </div>
+      </td>
       <td style="color:#64748b;font-size:.8rem">${esc(c.role)||'—'}</td>
       <td class="ed" data-noclick><span class="badge s-${c.stage}">${c.stage}</span></td>
       <td class="ed" data-noclick>${roundBadge}</td>
       <td class="ed" data-noclick>${esc(c.interviewer)||'<span style="color:#cbd5e1">—</span>'}</td>
+      <td data-noclick><button class="view-btn">View Profile</button></td>
       <td><button class="row-del">×</button></td>`;
 
-    // Row click → open detail (ignore clicks on editable cells and delete)
+    // View Profile button
+    tr.querySelector('.view-btn').addEventListener('click', function(e) {
+      e.stopPropagation();
+      openCandidateDetail(c.id);
+    });
+
+    // Row click (name/role columns)
     tr.addEventListener('click', function(e) {
       if (e.target.closest('[data-noclick]') || e.target.closest('.row-del')) return;
       openCandidateDetail(c.id);
@@ -678,16 +719,37 @@ function openCandidateDetail(id) {
   detailCandidateId = id;
   const c = candidates.find(x => x.id === id);
   if (!c) return;
+
   document.getElementById('d-av').style.background = avColor(c.name);
   document.getElementById('d-av').textContent = initials(c.name);
   document.getElementById('d-name').textContent = c.name;
   document.getElementById('d-meta').innerHTML =
-    `<span style="color:#64748b">${esc(c.role)||'No role specified'}</span>` +
+    (c.role ? `<span style="color:#64748b;font-weight:600">${esc(c.role)}</span>` : '') +
     (c.stage ? `<span class="badge s-${c.stage}">${c.stage}</span>` : '') +
     (c.interviewRound ? `<span class="badge cr-${c.interviewRound.split(' ')[0]}">${c.interviewRound}</span>` : '');
+
+  // Contact bar
+  const bar = document.getElementById('d-contact-bar');
+  const link = (label, icon, val, href) => {
+    const cls = val ? '' : ' no-val';
+    const tag = val ? `<a class="d-contact-link${cls}" href="${esc(href||val)}" target="_blank" rel="noopener">` : `<span class="d-contact-link${cls}">`;
+    const end = val ? '</a>' : '</span>';
+    return tag + icon + ' ' + esc(val || label) + end;
+  };
+  bar.innerHTML =
+    link('No email', '✉', c.email, 'mailto:'+c.email) +
+    link('No phone', '📞', c.phone, 'tel:'+c.phone) +
+    link('LinkedIn', '🔗', c.linkedin, c.linkedin && !/^https?:\/\//i.test(c.linkedin) ? 'https://'+c.linkedin : c.linkedin) +
+    link('CV / Resume', '📄', c.cvUrl, c.cvUrl && !/^https?:\/\//i.test(c.cvUrl) ? 'https://'+c.cvUrl : c.cvUrl);
+
+  // Notes
+  document.getElementById('d-notes').value = c.notes || '';
+
+  // Feedback form defaults
   document.getElementById('df-date').value = new Date().toISOString().slice(0,10);
-  document.getElementById('df-int').value = '';
+  document.getElementById('df-int').value = c.interviewer || '';
   document.getElementById('df-text').value = '';
+
   renderFeedbackHistory(c);
   closeModals();
   document.getElementById('m-detail').classList.add('open');
@@ -741,6 +803,14 @@ function deleteFeedbackEntry(fid) {
   save();
 }
 
+function saveCandidateNotes() {
+  const c = candidates.find(x => x.id === detailCandidateId);
+  if (!c) return;
+  c.notes = document.getElementById('d-notes').value;
+  localStorage.setItem('rec_candidates', JSON.stringify(candidates));
+  toast('Notes saved');
+}
+
 // ── Delete ─────────────────────────────────────────────
 function del(type, id) {
   if (!confirm('Remove this entry?')) return;
@@ -769,8 +839,20 @@ function saveRole() {
 function saveCandidate() {
   const name = document.getElementById('c-name').value.trim();
   if (!name) { alert('Please enter a candidate name.'); return; }
-  candidates.push({ id:uid(), name, role:document.getElementById('c-role').value.trim(), stage:document.getElementById('c-stage').value, interviewRound:document.getElementById('c-round').value, interviewer:document.getElementById('c-int').value.trim(), feedback:document.getElementById('c-feedback').value.trim(), feedbackHistory:[] });
-  ['c-name','c-role','c-int','c-feedback'].forEach(id => document.getElementById(id).value='');
+  candidates.push({
+    id: uid(), name,
+    role:          document.getElementById('c-role').value.trim(),
+    stage:         document.getElementById('c-stage').value,
+    interviewRound:document.getElementById('c-round').value,
+    interviewer:   document.getElementById('c-int').value.trim(),
+    email:         document.getElementById('c-email').value.trim(),
+    phone:         document.getElementById('c-phone').value.trim(),
+    linkedin:      document.getElementById('c-linkedin').value.trim(),
+    cvUrl:         document.getElementById('c-cv').value.trim(),
+    notes:         document.getElementById('c-feedback').value.trim(),
+    feedbackHistory: []
+  });
+  ['c-name','c-role','c-int','c-feedback','c-email','c-phone','c-linkedin','c-cv'].forEach(id => document.getElementById(id).value='');
   document.getElementById('c-round').value='';
   closeModals(); save();
 }
