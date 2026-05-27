@@ -91,6 +91,10 @@
     .r-Technical{ background:#dbeafe; color:#1e40af; }
     .r-Culture  { background:#fef3c7; color:#92400e; }
     .r-Final    { background:#ede9fe; color:#5b21b6; }
+    .cr-First   { background:#dbeafe; color:#1e40af; }
+    .cr-2nd     { background:#e0e7ff; color:#3730a3; }
+    .cr-Final   { background:#d1fae5; color:#065f46; }
+    .cr-AOB     { background:#f1f5f9; color:#475569; }
 
     /* ── Empty state ── */
     .empty { text-align:center; padding:36px 20px; color:#94a3b8; }
@@ -248,7 +252,7 @@
       <div class="table-wrap">
         <table>
           <thead><tr>
-            <th>Name</th><th>Role Applied</th><th>Stage ✎</th><th>Interviewer ✎</th><th>Notes ✎</th><th></th>
+            <th>Name</th><th>Role Applied</th><th>Stage ✎</th><th>Round ✎</th><th>Interviewer ✎</th><th>Feedback ✎</th><th></th>
           </tr></thead>
           <tbody id="cands-body"></tbody>
         </table>
@@ -325,8 +329,17 @@
         </select>
       </div>
     </div>
-    <div class="fg"><label>Interviewer / Owner</label><input id="c-int" type="text" placeholder="Name"></div>
-    <div class="fg"><label>Notes</label><textarea id="c-notes" placeholder="Strengths, concerns, links…"></textarea></div>
+    <div class="fg-row">
+      <div class="fg"><label>Interview Round</label>
+        <select id="c-round">
+          <option value="" selected>— None —</option>
+          <option>First Interview</option><option>2nd Interview</option>
+          <option>Final</option><option>AOB</option>
+        </select>
+      </div>
+      <div class="fg"><label>Interviewer / Owner</label><input id="c-int" type="text" placeholder="Name"></div>
+    </div>
+    <div class="fg"><label>Feedback</label><textarea id="c-feedback" placeholder="Interview notes, strengths, concerns…"></textarea></div>
     <div class="modal-foot">
       <button class="btn-cancel" onclick="closeModals()">Cancel</button>
       <button class="btn-save" onclick="saveCandidate()">Add Candidate</button>
@@ -445,6 +458,7 @@ const OPTS = {
   rstatus:  ['Active','Screening','Interviewing','Offer Sent','Filled','On Hold','Cancelled'],
   priority: ['High','Medium','Low'],
   cstage:   ['Applied','Screening','Interview','Offer','Hired','Rejected'],
+  iround:   ['First Interview','2nd Interview','Final','AOB'],
   round:    ['1st Round','Technical','Culture','Final'],
 };
 
@@ -521,17 +535,23 @@ function renderCandidates() {
   body.innerHTML = '';
   candidates.forEach(c => {
     const tr = document.createElement('tr');
+    const roundKey = (c.interviewRound||'').split(' ')[0];
+    const roundBadge = c.interviewRound
+      ? `<span class="badge cr-${roundKey}">${c.interviewRound}</span>`
+      : '<span style="color:#cbd5e1">—</span>';
     tr.innerHTML = `
       <td><div class="name-cell"><div class="av" style="background:${avColor(c.name)}">${initials(c.name)}</div><strong>${esc(c.name)}</strong></div></td>
       <td style="color:#64748b;font-size:.8rem">${esc(c.role)||'—'}</td>
       <td class="ed"><span class="badge s-${c.stage}">${c.stage}</span></td>
+      <td class="ed">${roundBadge}</td>
       <td class="ed">${esc(c.interviewer)||'<span style="color:#cbd5e1">—</span>'}</td>
-      <td class="ed" style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(c.notes)||'<span style="color:#cbd5e1">—</span>'}</td>
+      <td class="ed" style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(c.feedback)}">${esc(c.feedback)||'<span style="color:#cbd5e1">—</span>'}</td>
       <td><button class="row-del" onclick="del('candidates','${c.id}')">×</button></td>`;
     wireEditable(tr, c, [
-      {col:2, field:'stage',       type:'cstage'},
-      {col:3, field:'interviewer', type:'text'},
-      {col:4, field:'notes',       type:'text'},
+      {col:2, field:'stage',         type:'cstage'},
+      {col:3, field:'interviewRound',type:'iround'},
+      {col:4, field:'interviewer',   type:'text'},
+      {col:5, field:'feedback',      type:'text'},
     ]);
     body.appendChild(tr);
   });
@@ -599,8 +619,9 @@ function saveRole() {
 function saveCandidate() {
   const name = document.getElementById('c-name').value.trim();
   if (!name) { alert('Please enter a candidate name.'); return; }
-  candidates.push({ id:uid(), name, role:document.getElementById('c-role').value.trim(), stage:document.getElementById('c-stage').value, interviewer:document.getElementById('c-int').value.trim(), notes:document.getElementById('c-notes').value.trim() });
-  ['c-name','c-role','c-int','c-notes'].forEach(id => document.getElementById(id).value='');
+  candidates.push({ id:uid(), name, role:document.getElementById('c-role').value.trim(), stage:document.getElementById('c-stage').value, interviewRound:document.getElementById('c-round').value, interviewer:document.getElementById('c-int').value.trim(), feedback:document.getElementById('c-feedback').value.trim() });
+  ['c-name','c-role','c-int','c-feedback'].forEach(id => document.getElementById(id).value='');
+  document.getElementById('c-round').value='';
   closeModals(); save();
 }
 function saveInterview() {
@@ -617,8 +638,8 @@ function exportAll() {
   const csv = [
     'ROLES', 'Title,Department,Hiring Manager,Target Start,Priority,Status,Notes',
     ...roles.map(r => [r.title,r.dept,r.hm,r.start,r.priority,r.status,r.notes].map(q).join(',')),
-    '', 'CANDIDATES', 'Name,Role Applied,Stage,Interviewer,Notes',
-    ...candidates.map(c => [c.name,c.role,c.stage,c.interviewer,c.notes].map(q).join(',')),
+    '', 'CANDIDATES', 'Name,Role Applied,Stage,Interview Round,Interviewer,Feedback',
+    ...candidates.map(c => [c.name,c.role,c.stage,c.interviewRound,c.interviewer,c.feedback].map(q).join(',')),
     '', 'INTERVIEWS', 'Candidate,Role,Date,Interviewer,Round',
     ...interviews.map(i => [i.name,i.role,i.date,i.interviewer,i.round].map(q).join(','))
   ].join('\n');
