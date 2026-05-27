@@ -132,7 +132,46 @@
     }
   </style>
 </head>
+<style>
+  #pw-screen { position:fixed; inset:0; background:#1a2332; display:flex; align-items:center; justify-content:center; z-index:9999; }
+  #pw-box { background:white; border-radius:14px; padding:36px 40px; width:340px; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,.3); }
+  #pw-box h2 { font-size:1.1rem; font-weight:700; color:#1a2332; margin-bottom:6px; }
+  #pw-box p { font-size:.82rem; color:#94a3b8; margin-bottom:22px; }
+  #pw-input { width:100%; border:1px solid #e2e8f0; border-radius:8px; padding:10px 14px; font-size:.95rem; font-family:inherit; outline:none; margin-bottom:12px; color:#1a2332; }
+  #pw-input:focus { border-color:#6366f1; }
+  #pw-btn { width:100%; background:#6366f1; color:white; border:none; border-radius:8px; padding:11px; font-size:.9rem; font-weight:700; cursor:pointer; font-family:inherit; }
+  #pw-btn:hover { background:#4f46e5; }
+  #pw-err { font-size:.78rem; color:#ef4444; margin-top:8px; display:none; }
+</style>
 <body>
+
+<div id="pw-screen">
+  <div id="pw-box">
+    <h2>Recruitment Dashboard</h2>
+    <p>Enter the password to continue</p>
+    <input id="pw-input" type="password" placeholder="Password" onkeydown="if(event.key==='Enter')checkPw()">
+    <button id="pw-btn" onclick="checkPw()">Continue</button>
+    <div id="pw-err">Incorrect password — please try again</div>
+  </div>
+</div>
+
+<script>
+  (function() {
+    if (sessionStorage.getItem('rd_auth') === '1') {
+      document.getElementById('pw-screen').style.display = 'none';
+    }
+  })();
+  function checkPw() {
+    if (document.getElementById('pw-input').value === 'kaidon2026!') {
+      sessionStorage.setItem('rd_auth', '1');
+      document.getElementById('pw-screen').style.display = 'none';
+    } else {
+      document.getElementById('pw-err').style.display = 'block';
+      document.getElementById('pw-input').value = '';
+      document.getElementById('pw-input').focus();
+    }
+  }
+</script>
 
 <header class="header">
   <div>
