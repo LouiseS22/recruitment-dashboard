@@ -45,6 +45,10 @@
 
     /* ── Pipeline funnel ── */
     .funnel { display: flex; align-items: stretch; }
+    .funnel-exits { display:flex; gap:10px; margin-top:12px; padding-top:12px; border-top:1px solid #f1f5f9; flex-wrap:wrap; }
+    .funnel-exit { display:flex; align-items:center; gap:8px; padding:8px 14px; border-radius:8px; flex:1; min-width:120px; }
+    .funnel-exit-n { font-size:1.4rem; font-weight:800; line-height:1; }
+    .funnel-exit-lbl { font-size:.65rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; }
     .funnel-step { flex:1; text-align:center; padding:12px 6px 10px; border-radius:8px; }
     .funnel-arrow { display:flex; align-items:center; color:#cbd5e1; font-size:.85rem; padding:0 2px; flex-shrink:0; }
     .funnel-n { font-size:1.6rem; font-weight:800; color:white; }
@@ -77,6 +81,7 @@
     .s-Offer        { background:#d1fae5; color:#065f46; }
     .s-Hired        { background:#dcfce7; color:#14532d; }
     .s-Rejected     { background:#fee2e2; color:#991b1b; }
+    .s-Dropped-Out  { background:#fff7ed; color:#9a3412; }
     .st-Active      { background:#dbeafe; color:#1e40af; }
     .st-Screening   { background:#fef3c7; color:#92400e; }
     .st-Interviewing{ background:#e0e7ff; color:#3730a3; }
@@ -245,6 +250,7 @@
     <div class="card">
       <div class="card-header"><span class="card-title">Candidate Pipeline</span></div>
       <div class="funnel" id="funnel"></div>
+      <div class="funnel-exits" id="funnel-exits"></div>
     </div>
     <div class="card">
       <div class="card-header"><span class="card-title">Roles by Department</span></div>
@@ -352,7 +358,7 @@
       <div class="fg"><label>Stage</label>
         <select id="c-stage">
           <option selected>Applied</option><option>Screening</option><option>Interview</option>
-          <option>Offer</option><option>Hired</option><option>Rejected</option>
+          <option>Offer</option><option>Hired</option><option>Rejected</option><option>Dropped Out</option>
         </select>
       </div>
     </div>
@@ -486,7 +492,7 @@ document.getElementById('hdr-date').textContent =
 // ── KPIs ──────────────────────────────────────────────
 function updateKPIs() {
   const open    = roles.filter(r => !['Filled','Cancelled'].includes(r.status));
-  const active  = candidates.filter(c => !['Hired','Rejected'].includes(c.stage));
+  const active  = candidates.filter(c => !['Hired','Rejected','Dropped Out'].includes(c.stage));
   const filled  = roles.filter(r => r.status === 'Filled');
   const now = new Date();
   const mon = new Date(now); mon.setDate(now.getDate() - ((now.getDay()||7) - 1)); mon.setHours(0,0,0,0);
@@ -516,6 +522,18 @@ function updateFunnel() {
       <div class="funnel-lbl">${s}</div>
     </div>`
   ).join('');
+
+  const rejected   = candidates.filter(c => c.stage === 'Rejected').length;
+  const droppedOut = candidates.filter(c => c.stage === 'Dropped Out').length;
+  document.getElementById('funnel-exits').innerHTML =
+    `<div class="funnel-exit" style="background:#fee2e2">
+       <div class="funnel-exit-n" style="color:#991b1b">${rejected}</div>
+       <div class="funnel-exit-lbl" style="color:#991b1b">Rejected</div>
+     </div>
+     <div class="funnel-exit" style="background:#fff7ed">
+       <div class="funnel-exit-n" style="color:#9a3412">${droppedOut}</div>
+       <div class="funnel-exit-lbl" style="color:#9a3412">Dropped Out</div>
+     </div>`;
 }
 
 // ── Dept chart ─────────────────────────────────────────
@@ -546,7 +564,7 @@ const D_FG = { Engineering:'#3730a3', Product:'#1e40af', Commercial:'#9a3412', M
 const OPTS = {
   rstatus:  ['Active','Screening','Interviewing','Offer Sent','Filled','On Hold','Cancelled'],
   priority: ['High','Medium','Low'],
-  cstage:   ['Applied','Screening','Interview','Offer','Hired','Rejected'],
+  cstage:   ['Applied','Screening','Interview','Offer','Hired','Rejected','Dropped Out'],
   iround:   ['First Interview','2nd Interview','Final','AOB'],
   round:    ['First Interview','2nd Interview','Final','AOB'],
 };
@@ -643,7 +661,7 @@ function renderCandidates() {
         </div>
       </td>
       <td style="color:#64748b;font-size:.8rem">${esc(c.role)||'—'}</td>
-      <td class="ed" data-noclick><span class="badge s-${c.stage}">${c.stage}</span></td>
+      <td class="ed" data-noclick><span class="badge s-${c.stage.replace(/\s+/g,'-')}">${c.stage}</span></td>
       <td class="ed" data-noclick>${roundBadge}</td>
       <td class="ed" data-noclick>${esc(c.interviewer)||'<span style="color:#cbd5e1">—</span>'}</td>
       <td data-noclick><button class="view-btn">View Profile</button></td>
@@ -725,7 +743,7 @@ function openCandidateDetail(id) {
   document.getElementById('d-name').textContent = c.name;
   document.getElementById('d-meta').innerHTML =
     (c.role ? `<span style="color:#64748b;font-weight:600">${esc(c.role)}</span>` : '') +
-    (c.stage ? `<span class="badge s-${c.stage}">${c.stage}</span>` : '') +
+    (c.stage ? `<span class="badge s-${c.stage.replace(/\s+/g,'-')}">${c.stage}</span>` : '') +
     (c.interviewRound ? `<span class="badge cr-${c.interviewRound.split(' ')[0]}">${c.interviewRound}</span>` : '');
 
   // Contact bar
