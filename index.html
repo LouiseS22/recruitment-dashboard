@@ -594,24 +594,44 @@ function renderCandidates() {
   body.innerHTML = '';
   candidates.forEach(c => {
     const tr = document.createElement('tr');
+    tr.style.cursor = 'pointer';
+    tr.title = 'Click to view profile & feedback';
+
     const roundKey = (c.interviewRound||'').split(' ')[0];
     const roundBadge = c.interviewRound
       ? `<span class="badge cr-${roundKey}">${c.interviewRound}</span>`
       : '<span style="color:#cbd5e1">—</span>';
+    const feedbackCount = (c.feedbackHistory||[]).length;
+    const fbChip = feedbackCount > 0
+      ? `<span style="background:#e0e7ff;color:#3730a3;border-radius:99px;padding:1px 7px;font-size:.68rem;font-weight:700;margin-left:6px">${feedbackCount} note${feedbackCount>1?'s':''}</span>`
+      : '';
+
     tr.innerHTML = `
-      <td><div class="name-cell"><div class="av" style="background:${avColor(c.name)}">${initials(c.name)}</div><strong>${esc(c.name)}</strong></div></td>
+      <td><div class="name-cell"><div class="av" style="background:${avColor(c.name)}">${initials(c.name)}</div><span style="font-weight:600">${esc(c.name)}</span>${fbChip}</div></td>
       <td style="color:#64748b;font-size:.8rem">${esc(c.role)||'—'}</td>
-      <td class="ed"><span class="badge s-${c.stage}">${c.stage}</span></td>
-      <td class="ed">${roundBadge}</td>
-      <td class="ed">${esc(c.interviewer)||'<span style="color:#cbd5e1">—</span>'}</td>
-      <td style="white-space:nowrap">
-        <button class="view-btn" onclick="openCandidateDetail('${c.id}')">View / Feedback</button>
-        <button class="row-del" style="opacity:1;margin-left:4px" onclick="del('candidates','${c.id}')">×</button>
-      </td>`;
+      <td class="ed" data-noclick><span class="badge s-${c.stage}">${c.stage}</span></td>
+      <td class="ed" data-noclick>${roundBadge}</td>
+      <td class="ed" data-noclick>${esc(c.interviewer)||'<span style="color:#cbd5e1">—</span>'}</td>
+      <td><button class="row-del">×</button></td>`;
+
+    // Row click → open detail (ignore clicks on editable cells and delete)
+    tr.addEventListener('click', function(e) {
+      if (e.target.closest('[data-noclick]') || e.target.closest('.row-del')) return;
+      openCandidateDetail(c.id);
+    });
+
+    // Delete button
+    tr.querySelector('.row-del').addEventListener('click', function(e) {
+      e.stopPropagation();
+      if (!confirm('Remove this candidate?')) return;
+      candidates = candidates.filter(x => x.id !== c.id);
+      save();
+    });
+
     wireEditable(tr, c, [
-      {col:2, field:'stage',         type:'cstage'},
-      {col:3, field:'interviewRound',type:'iround'},
-      {col:4, field:'interviewer',   type:'text'},
+      {col:2, field:'stage',          type:'cstage'},
+      {col:3, field:'interviewRound', type:'iround'},
+      {col:4, field:'interviewer',    type:'text'},
     ]);
     body.appendChild(tr);
   });
