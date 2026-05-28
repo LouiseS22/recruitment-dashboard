@@ -34,6 +34,14 @@
     .an-bar-fill { height:100%; border-radius:99px; transition:width .4s; }
     .conv-bar-bg { height:8px; background:#f1f5f9; border-radius:99px; overflow:hidden; flex:1; min-width:60px; }
     .conv-bar-fill { height:100%; border-radius:99px; }
+    /* ── Interview conversion rates ── */
+    .conv-rate-row { display:flex; align-items:center; gap:16px; padding:11px 0; border-bottom:1px solid #f1f5f9; }
+    .conv-rate-row:last-child { border-bottom:none; }
+    .conv-rate-lbl { font-size:.845rem; font-weight:600; color:#1a2332; min-width:220px; }
+    .conv-rate-track { flex:1; height:10px; background:#f1f5f9; border-radius:99px; overflow:hidden; }
+    .conv-rate-fill { height:100%; border-radius:99px; transition:width .5s; }
+    .conv-rate-pct { font-size:1.05rem; font-weight:800; min-width:46px; text-align:right; }
+    .conv-rate-n { font-size:.74rem; color:#94a3b8; min-width:64px; }
 
     /* ── Layout ── */
     .main { padding: 24px 32px; max-width: 1440px; margin: 0 auto; }
@@ -421,6 +429,15 @@
       </div>
     </div>
 
+  </div>
+
+  <!-- Interview conversion rates -->
+  <div class="table-card" style="margin-bottom:22px">
+    <div class="table-bar">
+      <span class="table-bar-title">Interview Conversion Rates</span>
+      <span style="font-size:.75rem;color:#94a3b8">Based on feedback history &amp; interview round data</span>
+    </div>
+    <div style="padding:4px 22px 14px" id="an-conv-rates"></div>
   </div>
 
   <!-- Time to hire -->
@@ -1246,6 +1263,42 @@ function updateAnalytics() {
         </tr>`;
       }).join('')
     : '<tr><td colspan="3" style="text-align:center;padding:24px;color:#cbd5e1">No roles added yet</td></tr>';
+
+  // ── Interview conversion rates ──
+  const IROUND_ORDER = ['First Interview','2nd Interview','Final'];
+  function hasReachedRound(c, round) {
+    const ri = IROUND_ORDER.indexOf(round);
+    if (ri === -1) return false;
+    if ((c.feedbackHistory||[]).some(f => IROUND_ORDER.indexOf(f.round) >= ri)) return true;
+    if (IROUND_ORDER.indexOf(c.interviewRound||'') >= ri) return true;
+    if (round === 'Final' && ['Offer','Hired'].includes(c.stage)) return true;
+    return false;
+  }
+  const n1st   = candidates.filter(c => hasReachedRound(c,'First Interview')).length;
+  const n2nd   = candidates.filter(c => hasReachedRound(c,'2nd Interview')).length;
+  const nFinal = candidates.filter(c => hasReachedRound(c,'Final')).length;
+  const nOffer = offer + hired; // candidates who reached Offer stage (includes those already Hired)
+
+  const convSteps = [
+    { label:'1st Interview → 2nd Interview', from:n1st,   to:n2nd,   color:'#6366f1' },
+    { label:'2nd Interview → Final',         from:n2nd,   to:nFinal, color:'#3b82f6' },
+    { label:'Final → Offer',                 from:nFinal, to:nOffer, color:'#10b981' },
+    { label:'1st Interview → Final (overall)',from:n1st,  to:nFinal, color:'#8b5cf6', divider:true },
+  ];
+  const crEl = document.getElementById('an-conv-rates');
+  if (crEl) {
+    crEl.innerHTML = convSteps.map(step => {
+      const pct  = step.from > 0 ? Math.round(step.to / step.from * 100) : null;
+      const barW = pct !== null ? Math.min(pct, 100) : 0;
+      const sep  = step.divider ? 'border-top:2px dashed #e2e8f0;margin-top:6px;padding-top:6px;' : '';
+      return `<div class="conv-rate-row" style="${sep}">
+        <div class="conv-rate-lbl">${step.label}</div>
+        <div class="conv-rate-track"><div class="conv-rate-fill" style="width:${barW}%;background:${step.color}"></div></div>
+        <div class="conv-rate-pct" style="color:${step.color}">${pct !== null ? pct+'%' : '—'}</div>
+        <div class="conv-rate-n">${step.to} of ${step.from}</div>
+      </div>`;
+    }).join('');
+  }
 
   // ── Time to hire ──
   const hiredCands = candidates.filter(c => c.stage==='Hired');
