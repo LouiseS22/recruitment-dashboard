@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Recruitment Dashboard</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.24.0/dist/tabler-icons.min.css">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f0f4f8; color: #1a2332; }
@@ -220,11 +221,104 @@
     .fb-empty { text-align:center; padding:20px; color:#cbd5e1; font-size:.85rem; }
     .add-fb-form { background:#f8fafc; border-radius:8px; padding:14px; border:1px dashed #e2e8f0; margin-top:4px; }
 
+    /* ── Interview Guide ── */
+    .guide-section { margin-bottom: 36px; }
+    .guide-section-heading { font-size: .7rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: .1em; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0; display: flex; align-items: center; gap: 8px; }
+    .guide-section-heading .ti { font-size: 1rem; color: #6366f1; }
+
+    /* Stage flow */
+    .stage-flow { display: flex; align-items: stretch; gap: 0; margin-bottom: 22px; flex-wrap: wrap; gap: 10px; }
+    .stage-flow-step { flex: 1; min-width: 150px; background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 18px 14px; text-align: center; }
+    .stage-flow-step .sf-icon { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; font-size: 1.15rem; }
+    .stage-flow-step .sf-label { font-size: .84rem; font-weight: 700; color: #1a2332; margin-bottom: 3px; }
+    .stage-flow-step .sf-time { font-size: .7rem; font-weight: 600; color: #94a3b8; margin-bottom: 8px; }
+    .stage-flow-step .sf-desc { font-size: .75rem; color: #64748b; line-height: 1.55; }
+    .stage-flow-arrow { display: flex; align-items: center; padding: 0 4px; color: #cbd5e1; font-size: 1.6rem; font-weight: 300; flex-shrink: 0; align-self: center; }
+
+    .guide-metric-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    .guide-metric { background: linear-gradient(135deg, #1a2332 0%, #2d3f57 100%); border-radius: 10px; padding: 20px 22px; text-align: center; }
+    .guide-metric .gm-n { font-size: 2rem; font-weight: 800; color: white; line-height: 1; }
+    .guide-metric .gm-lbl { font-size: .73rem; color: rgba(255,255,255,.6); margin-top: 6px; font-weight: 500; }
+
+    /* Stage guide cards */
+    .stage-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .stage-card { background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 20px; border-left: 4px solid; }
+    .stage-card-title { font-size: .9rem; font-weight: 700; color: #1a2332; margin-bottom: 3px; display: flex; align-items: center; gap: 8px; }
+    .stage-card-runner { font-size: .73rem; color: #94a3b8; margin-bottom: 14px; display: flex; align-items: center; gap: 4px; }
+    .stage-card h4 { font-size: .65rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: .07em; margin: 14px 0 6px; }
+    .stage-card ul { list-style: none; padding: 0; }
+    .stage-card ul li { font-size: .82rem; color: #475569; padding: 3px 0 3px 16px; position: relative; line-height: 1.5; }
+    .stage-card ul li::before { content: '›'; position: absolute; left: 0; color: #cbd5e1; font-weight: 700; }
+    .stage-card .good-box { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 10px 12px; margin-top: 10px; font-size: .8rem; color: #14532d; line-height: 1.6; }
+
+    /* STAR framework */
+    .star-intro { font-size: .85rem; color: #475569; line-height: 1.65; margin-bottom: 18px; background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px 18px; }
+    .star-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px; }
+    .star-card { border-radius: 10px; padding: 20px; border: 1px solid rgba(0,0,0,.06); }
+    .star-card .star-letter { font-size: 2.6rem; font-weight: 900; line-height: 1; margin-bottom: 4px; }
+    .star-card .star-word { font-size: .9rem; font-weight: 700; margin-bottom: 8px; }
+    .star-card .star-desc { font-size: .82rem; line-height: 1.55; }
+    .star-card .star-probe { font-size: .76rem; margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(0,0,0,.08); line-height: 1.55; font-style: italic; opacity: .8; }
+
+    .watch-outs { background: #fff7ed; border: 1px solid #fed7aa; border-radius: 10px; padding: 18px 20px; }
+    .watch-outs h4 { font-size: .68rem; font-weight: 700; color: #9a3412; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+    .watch-outs ul { list-style: none; padding: 0; }
+    .watch-outs ul li { font-size: .82rem; color: #7c2d12; padding: 4px 0 4px 22px; position: relative; line-height: 1.5; }
+    .watch-outs ul li::before { content: '⚠'; position: absolute; left: 0; font-size: .78rem; }
+
+    /* Question bank */
+    .qb-subsection { margin-bottom: 24px; }
+    .qb-subsection-title { font-size: .8rem; font-weight: 700; color: #1a2332; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; padding-bottom: 8px; border-bottom: 1px solid #f1f5f9; }
+    .qb-subsection-title .ti { color: #6366f1; font-size: .95rem; }
+    .q-block { background: white; border: 1px solid #e2e8f0; border-left: 3px solid; border-radius: 8px; padding: 14px 16px; margin-bottom: 8px; }
+    .q-text { font-size: .875rem; color: #1a2332; font-weight: 500; line-height: 1.55; margin-bottom: 8px; }
+    .q-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+    .q-tag-competency { font-size: .64rem; font-weight: 700; background: #f1f5f9; color: #64748b; padding: 2px 8px; border-radius: 99px; }
+    .q-tag-first  { font-size: .64rem; font-weight: 700; background: #dbeafe; color: #1e40af; padding: 2px 8px; border-radius: 99px; }
+    .q-tag-second { font-size: .64rem; font-weight: 700; background: #e0e7ff; color: #3730a3; padding: 2px 8px; border-radius: 99px; }
+    .q-tag-final  { font-size: .64rem; font-weight: 700; background: #d1fae5; color: #065f46; padding: 2px 8px; border-radius: 99px; }
+    .q-tag-either { font-size: .64rem; font-weight: 700; background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 99px; }
+
+    /* About Deliverance */
+    .about-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    .about-card { background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 18px; }
+    .about-card .ac-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; font-size: 1.1rem; }
+    .about-card .ac-title { font-size: .82rem; font-weight: 700; color: #1a2332; margin-bottom: 8px; }
+    .about-card .ac-body { font-size: .8rem; color: #475569; line-height: 1.65; }
+
+    /* Dos & Don'ts */
+    .dd-subsection-title { font-size: .8rem; font-weight: 700; color: #1a2332; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+    .dd-subsection-title .ti { color: #6366f1; font-size: .95rem; }
+    .dd-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
+    .dd-panel { border-radius: 10px; padding: 18px 20px; }
+    .dd-panel-dos  { background: #f0fdf4; border: 1px solid #bbf7d0; }
+    .dd-panel-dont { background: #fff5f5; border: 1px solid #fecaca; }
+    .dd-panel h4 { font-size: .72rem; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; text-transform: uppercase; letter-spacing: .06em; }
+    .dd-panel-dos h4  { color: #14532d; }
+    .dd-panel-dont h4 { color: #991b1b; }
+    .dd-panel ul { list-style: none; padding: 0; }
+    .dd-panel ul li { font-size: .82rem; padding: 4px 0 4px 20px; position: relative; line-height: 1.5; }
+    .dd-panel-dos  ul li { color: #166534; }
+    .dd-panel-dont ul li { color: #7f1d1d; }
+    .dd-panel-dos  ul li::before { content: '✓'; position: absolute; left: 0; font-weight: 700; color: #16a34a; }
+    .dd-panel-dont ul li::before { content: '✗'; position: absolute; left: 0; font-weight: 700; color: #dc2626; }
+    .dd-after-card { background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 20px; }
+    .dd-after-card h4 { font-size: .72rem; font-weight: 700; color: #1a2332; margin-bottom: 14px; display: flex; align-items: center; gap: 6px; text-transform: uppercase; letter-spacing: .06em; }
+    .dd-after-card ul { list-style: none; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; }
+    .dd-after-card ul li { font-size: .82rem; color: #475569; padding: 4px 0 4px 18px; position: relative; line-height: 1.5; }
+    .dd-after-card ul li::before { content: '→'; position: absolute; left: 0; color: #6366f1; font-weight: 700; }
+
     @media(max-width:900px){
       .kpi-grid { grid-template-columns:1fr 1fr; }
       .two-col { grid-template-columns:1fr; }
       .main { padding:14px; }
       .header { padding:14px 16px; }
+      .stage-cards { grid-template-columns:1fr; }
+      .star-grid { grid-template-columns:1fr; }
+      .about-grid { grid-template-columns:1fr 1fr; }
+      .dd-grid { grid-template-columns:1fr; }
+      .guide-metric-row { grid-template-columns:1fr; }
+      .dd-after-card ul { grid-template-columns:1fr; }
     }
   </style>
 </head>
@@ -278,6 +372,7 @@
     <button class="tab-btn active" onclick="switchTab('dashboard',this)">Dashboard</button>
     <button class="tab-btn" onclick="switchTab('analytics',this)">Analytics</button>
     <button class="tab-btn" onclick="switchTab('joiners',this)">New Joiners</button>
+    <button class="tab-btn" onclick="switchTab('guide',this)">Interview Guide</button>
   </div>
   <div class="header-actions">
     <button class="btn btn-ghost" onclick="exportAll()">Export CSV</button>
@@ -506,6 +601,411 @@
         <tbody id="joiners-body"></tbody>
       </table>
     </div>
+  </div>
+
+</div>
+
+<!-- ── Interview Guide Tab ── -->
+<div class="main" id="tab-guide" style="display:none">
+
+  <!-- ─ Section 1: Hiring Process Overview ─ -->
+  <div class="guide-section">
+    <div class="guide-section-heading">
+      <i class="ti ti-route"></i> Hiring Process Overview
+    </div>
+
+    <div class="stage-flow">
+      <div class="stage-flow-step">
+        <div class="sf-icon" style="background:#ede9fe"><i class="ti ti-phone" style="color:#5b21b6"></i></div>
+        <div class="sf-label">Recruiter Screening</div>
+        <div class="sf-time">30 min</div>
+        <div class="sf-desc">CV review, motivation check, salary &amp; logistics alignment, sell the company</div>
+      </div>
+      <div class="stage-flow-arrow">›</div>
+      <div class="stage-flow-step">
+        <div class="sf-icon" style="background:#dbeafe"><i class="ti ti-user-check" style="color:#1e40af"></i></div>
+        <div class="sf-label">First Stage</div>
+        <div class="sf-time">60 min</div>
+        <div class="sf-desc">Hiring manager, role deep-dive, 2–3 STAR questions, culture fit</div>
+      </div>
+      <div class="stage-flow-arrow">›</div>
+      <div class="stage-flow-step">
+        <div class="sf-icon" style="background:#e0f2fe"><i class="ti ti-users" style="color:#0369a1"></i></div>
+        <div class="sf-label">Second Stage</div>
+        <div class="sf-time">90 min</div>
+        <div class="sf-desc">Panel or task-based, technical or skills assessment, deeper STAR, meet the team</div>
+      </div>
+      <div class="stage-flow-arrow">›</div>
+      <div class="stage-flow-step">
+        <div class="sf-icon" style="background:#dcfce7"><i class="ti ti-building-skyscraper" style="color:#14532d"></i></div>
+        <div class="sf-label">Final Stage</div>
+        <div class="sf-time">60 min</div>
+        <div class="sf-desc">Senior leadership, values &amp; vision alignment, offer conversations begin</div>
+      </div>
+    </div>
+
+    <div class="guide-metric-row">
+      <div class="guide-metric">
+        <div class="gm-n">26</div>
+        <div class="gm-lbl">People Today</div>
+      </div>
+      <div class="guide-metric">
+        <div class="gm-n">~50</div>
+        <div class="gm-lbl">Target by Q4</div>
+      </div>
+      <div class="guide-metric">
+        <div class="gm-n">Series A</div>
+        <div class="gm-lbl">Q3 2026</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─ Section 2: Stage-by-Stage Guide ─ -->
+  <div class="guide-section">
+    <div class="guide-section-heading">
+      <i class="ti ti-list-details"></i> Stage-by-Stage Guide
+    </div>
+
+    <div class="stage-cards">
+
+      <div class="stage-card" style="border-left-color:#7c3aed">
+        <div class="stage-card-title"><i class="ti ti-phone" style="color:#7c3aed"></i> Recruiter Screening</div>
+        <div class="stage-card-runner"><i class="ti ti-user" style="font-size:.82rem"></i> Run by: Recruiter</div>
+        <h4>Goal</h4>
+        <ul><li>Qualify interest, logistics, and baseline fit before consuming manager time</li></ul>
+        <h4>Activities</h4>
+        <ul>
+          <li>Confirm right to work</li>
+          <li>Walk through the role and company</li>
+          <li>Gauge motivation and salary expectations</li>
+          <li>Assess communication and enthusiasm</li>
+        </ul>
+        <div class="good-box"><strong>What good looks like:</strong> Candidate has done their research, is clear on why Deliverance, and has realistic expectations.</div>
+      </div>
+
+      <div class="stage-card" style="border-left-color:#2563eb">
+        <div class="stage-card-title"><i class="ti ti-user-check" style="color:#2563eb"></i> First Stage</div>
+        <div class="stage-card-runner"><i class="ti ti-user" style="font-size:.82rem"></i> Run by: Hiring Manager</div>
+        <h4>Goal</h4>
+        <ul><li>Assess competency, role fit, and culture alignment</li></ul>
+        <h4>Activities</h4>
+        <ul>
+          <li>Role overview and context (10 min)</li>
+          <li>2–3 STAR questions relevant to the role</li>
+          <li>Candidate Q&amp;A</li>
+          <li>Close with clear next steps</li>
+        </ul>
+        <div class="good-box"><strong>What good looks like:</strong> Specific evidence-based answers, genuine curiosity about the product and mission, coachable and self-aware.</div>
+      </div>
+
+      <div class="stage-card" style="border-left-color:#0284c7">
+        <div class="stage-card-title"><i class="ti ti-users" style="color:#0284c7"></i> Second Stage</div>
+        <div class="stage-card-runner"><i class="ti ti-users" style="font-size:.82rem"></i> Run by: Panel or includes a task</div>
+        <h4>Goal</h4>
+        <ul><li>Go deeper on skills, assess how they think and work</li></ul>
+        <h4>Activities</h4>
+        <ul>
+          <li>Technical or skills-based task or case study</li>
+          <li>Second round of STAR questions — different competencies</li>
+          <li>Informal meet with a team member</li>
+        </ul>
+        <div class="good-box"><strong>What good looks like:</strong> Structured thinking under pressure, collaborative approach, intellectual honesty about gaps.</div>
+      </div>
+
+      <div class="stage-card" style="border-left-color:#059669">
+        <div class="stage-card-title"><i class="ti ti-building-skyscraper" style="color:#059669"></i> Final Stage</div>
+        <div class="stage-card-runner"><i class="ti ti-crown" style="font-size:.82rem"></i> Run by: Senior Leadership</div>
+        <h4>Goal</h4>
+        <ul><li>Values alignment, mutual fit, and readiness to move to offer</li></ul>
+        <h4>Activities</h4>
+        <ul>
+          <li>Vision and culture conversation</li>
+          <li>Discussion of growth and career trajectory at Deliverance</li>
+          <li>Candidate's questions about the Series A, roadmap, and team</li>
+        </ul>
+        <div class="good-box"><strong>What good looks like:</strong> Genuine excitement about the scale-up moment, alignment with our values, asking smart questions.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ─ Section 3: STAR Framework ─ -->
+  <div class="guide-section">
+    <div class="guide-section-heading">
+      <i class="ti ti-star"></i> STAR Framework
+    </div>
+
+    <div class="star-intro">
+      The STAR framework is used across First and Second Stage interviews. It helps interviewers gather structured, evidence-based answers rather than opinions or hypotheticals. Always push for a real past example — redirect with <em>"Tell me about a time when…"</em> if the candidate goes hypothetical.
+    </div>
+
+    <div class="star-grid">
+      <div class="star-card" style="background:#dbeafe">
+        <div class="star-letter" style="color:#1e40af">S</div>
+        <div class="star-word" style="color:#1e40af">Situation</div>
+        <div class="star-desc" style="color:#1e3a8a">Set the scene — what was the context, when did this happen, and what were the stakes?</div>
+        <div class="star-probe" style="color:#1e3a8a">Follow-up: "Tell me more about the context. How large was the team / organisation / project at the time?"</div>
+      </div>
+      <div class="star-card" style="background:#ede9fe">
+        <div class="star-letter" style="color:#5b21b6">T</div>
+        <div class="star-word" style="color:#5b21b6">Task</div>
+        <div class="star-desc" style="color:#4c1d95">Define the challenge — what specifically were you personally responsible for?</div>
+        <div class="star-probe" style="color:#4c1d95">Follow-up: "What was your personal accountability here? What would have happened if you hadn't stepped in?"</div>
+      </div>
+      <div class="star-card" style="background:#fef3c7">
+        <div class="star-letter" style="color:#92400e">A</div>
+        <div class="star-word" style="color:#92400e">Action</div>
+        <div class="star-desc" style="color:#78350f">Show the work — what did you do, how, and why those choices over alternatives?</div>
+        <div class="star-probe" style="color:#78350f">Follow-up: "Walk me through your decision-making. What alternatives did you consider and why did you choose this approach?"</div>
+      </div>
+      <div class="star-card" style="background:#d1fae5">
+        <div class="star-letter" style="color:#065f46">R</div>
+        <div class="star-word" style="color:#065f46">Result</div>
+        <div class="star-desc" style="color:#064e3b">Prove the impact — what changed? Ideally with numbers or measurable outcomes.</div>
+        <div class="star-probe" style="color:#064e3b">Follow-up: "What was the measurable outcome? What would you do differently in hindsight?"</div>
+      </div>
+    </div>
+
+    <div class="watch-outs">
+      <h4><i class="ti ti-alert-triangle"></i> Watch-outs</h4>
+      <ul>
+        <li>Candidate says "we" throughout — push for individual contribution with "What was your specific role in that?"</li>
+        <li>Hypothetical answers — redirect with "That's useful context, but can you give me a real example when you did this?"</li>
+        <li>Results with no numbers or evidence of measurable impact — probe harder</li>
+        <li>Rehearsed stories that seem to fit every question — vary your probes to test depth</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ─ Section 4: Question Bank ─ -->
+  <div class="guide-section">
+    <div class="guide-section-heading">
+      <i class="ti ti-message-question"></i> Question Bank
+    </div>
+
+    <div class="qb-subsection">
+      <div class="qb-subsection-title"><i class="ti ti-clipboard-list"></i> General Competency (STAR)</div>
+
+      <div class="q-block" style="border-left-color:#6366f1">
+        <div class="q-text">"Tell me about a time you delivered under pressure or an unclear brief."</div>
+        <div class="q-tags">
+          <span class="q-tag-competency">Resilience &amp; Execution</span>
+          <span class="q-tag-either">First or Second Stage</span>
+        </div>
+      </div>
+
+      <div class="q-block" style="border-left-color:#6366f1">
+        <div class="q-text">"Describe a situation where you influenced without formal authority."</div>
+        <div class="q-tags">
+          <span class="q-tag-competency">Stakeholder Management</span>
+          <span class="q-tag-either">First or Second Stage</span>
+        </div>
+      </div>
+
+      <div class="q-block" style="border-left-color:#6366f1">
+        <div class="q-text">"Give me an example of a project that didn't go to plan. What happened and what did you learn?"</div>
+        <div class="q-tags">
+          <span class="q-tag-competency">Accountability &amp; Growth</span>
+          <span class="q-tag-first">First Stage</span>
+        </div>
+      </div>
+
+      <div class="q-block" style="border-left-color:#6366f1">
+        <div class="q-text">"Tell me about a decision you had to make with incomplete information."</div>
+        <div class="q-tags">
+          <span class="q-tag-competency">Judgement</span>
+          <span class="q-tag-either">First or Second Stage</span>
+        </div>
+      </div>
+
+      <div class="q-block" style="border-left-color:#6366f1">
+        <div class="q-text">"Describe a time you worked cross-functionally to hit a shared goal."</div>
+        <div class="q-tags">
+          <span class="q-tag-competency">Collaboration</span>
+          <span class="q-tag-second">Second Stage</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="qb-subsection">
+      <div class="qb-subsection-title"><i class="ti ti-building"></i> Deliverance-Specific</div>
+
+      <div class="q-block" style="border-left-color:#3b82f6">
+        <div class="q-text">"Tell me about a time you had to bridge the gap between technical and non-technical stakeholders."</div>
+        <div class="q-tags">
+          <span class="q-tag-competency">Communication</span>
+          <span class="q-tag-either">First or Second Stage</span>
+        </div>
+      </div>
+
+      <div class="q-block" style="border-left-color:#3b82f6">
+        <div class="q-text">"Describe a situation where you had to build something from scratch without a playbook or precedent."</div>
+        <div class="q-tags">
+          <span class="q-tag-competency">Entrepreneurial Thinking</span>
+          <span class="q-tag-second">Second Stage</span>
+        </div>
+      </div>
+
+      <div class="q-block" style="border-left-color:#3b82f6">
+        <div class="q-text">"Tell me about a time you pushed back on a client or senior stakeholder. What happened?"</div>
+        <div class="q-tags">
+          <span class="q-tag-competency">Courage &amp; Integrity</span>
+          <span class="q-tag-second">Second Stage</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="qb-subsection">
+      <div class="qb-subsection-title"><i class="ti ti-heart"></i> Motivation &amp; Culture</div>
+
+      <div class="q-block" style="border-left-color:#10b981">
+        <div class="q-text">"Why Deliverance, and why now? What is it about this stage of the company that interests you?"</div>
+        <div class="q-tags">
+          <span class="q-tag-competency">Motivation &amp; Fit</span>
+          <span class="q-tag-either">First or Second Stage</span>
+        </div>
+      </div>
+
+      <div class="q-block" style="border-left-color:#10b981">
+        <div class="q-text">"We're growing from 26 to ~50 people. What does joining at that scale-up moment mean to you, and what will you bring to it?"</div>
+        <div class="q-tags">
+          <span class="q-tag-competency">Growth Mindset</span>
+          <span class="q-tag-final">Final Stage</span>
+        </div>
+      </div>
+
+      <div class="q-block" style="border-left-color:#10b981">
+        <div class="q-text">"What does 'engineering rigour' mean to you in practice? How have you lived that value?"</div>
+        <div class="q-tags">
+          <span class="q-tag-competency">Values Alignment</span>
+          <span class="q-tag-either">First or Second Stage</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─ Section 5: About Deliverance ─ -->
+  <div class="guide-section">
+    <div class="guide-section-heading">
+      <i class="ti ti-building"></i> About Deliverance AI
+    </div>
+    <p style="font-size:.82rem;color:#64748b;margin-bottom:18px">Cheat sheet for pitching the company at any stage of the process.</p>
+
+    <div class="about-grid">
+
+      <div class="about-card">
+        <div class="ac-icon" style="background:#ede9fe"><i class="ti ti-cpu" style="color:#5b21b6;font-size:1.1rem"></i></div>
+        <div class="ac-title">What We Do</div>
+        <div class="ac-body">Production AI platform — assess, deploy, operate. Only 12% of AI POCs reach production; we close that gap. We are not a consultancy — we own outcomes.</div>
+      </div>
+
+      <div class="about-card">
+        <div class="ac-icon" style="background:#dbeafe"><i class="ti ti-users" style="color:#1e40af;font-size:1.1rem"></i></div>
+        <div class="ac-title">How We Work</div>
+        <div class="ac-body">Pod model: Engagement Lead, AI Architect, ML Engineer, Data Engineer. 4 weeks assess → 12–16 weeks deploy → ongoing operate. Own outcomes, not timesheets.</div>
+      </div>
+
+      <div class="about-card">
+        <div class="ac-icon" style="background:#e0f2fe"><i class="ti ti-layers" style="color:#0369a1;font-size:1.1rem"></i></div>
+        <div class="ac-title">The Platform</div>
+        <div class="ac-body">Three pillars: Clarity, Govern, Accelerate. Nine proprietary layers. 20+ production blueprints ready to deploy.</div>
+      </div>
+
+      <div class="about-card">
+        <div class="ac-icon" style="background:#dcfce7"><i class="ti ti-handshake" style="color:#14532d;font-size:1.1rem"></i></div>
+        <div class="ac-title">Partners</div>
+        <div class="ac-body">NVIDIA Solution Advisor. WWT partnership — co-funded assessments and joint UK enterprise account mapping.</div>
+      </div>
+
+      <div class="about-card">
+        <div class="ac-icon" style="background:#fef3c7"><i class="ti ti-trending-up" style="color:#92400e;font-size:1.1rem"></i></div>
+        <div class="ac-title">Stage &amp; Trajectory</div>
+        <div class="ac-body">26 people today, ~50 by year end. Series A Q3 2026. 50+ production AI projects. Six industry verticals.</div>
+      </div>
+
+      <div class="about-card">
+        <div class="ac-icon" style="background:#fee2e2"><i class="ti ti-heart" style="color:#991b1b;font-size:1.1rem"></i></div>
+        <div class="ac-title">Values</div>
+        <div class="ac-body">Engineering rigour · Radical transparency · Customer obsession · Operational discipline · Compounding value.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ─ Section 6: Dos & Don'ts ─ -->
+  <div class="guide-section">
+    <div class="guide-section-heading">
+      <i class="ti ti-thumb-up"></i> Dos &amp; Don'ts
+    </div>
+
+    <!-- During any interview -->
+    <div style="margin-bottom:24px">
+      <div class="dd-subsection-title"><i class="ti ti-video"></i> During Any Interview</div>
+      <div class="dd-grid">
+        <div class="dd-panel dd-panel-dos">
+          <h4><i class="ti ti-circle-check"></i> Do</h4>
+          <ul>
+            <li>Set the agenda clearly at the start</li>
+            <li>Take notes throughout the interview</li>
+            <li>Use follow-up probes after STAR answers</li>
+            <li>Give the candidate time for their Q&amp;A</li>
+            <li>Sell the company honestly, including the Series A stage</li>
+            <li>Ask the same core questions across all candidates for that role</li>
+          </ul>
+        </div>
+        <div class="dd-panel dd-panel-dont">
+          <h4><i class="ti ti-circle-x"></i> Don't</h4>
+          <ul>
+            <li>Ask hypothetical "what would you do" questions</li>
+            <li>Lead the witness or signal the answer you want</li>
+            <li>Fill silences before the candidate has finished thinking</li>
+            <li>Spend too long pitching and rush the evaluation</li>
+            <li>Compare candidates or mention other applicants</li>
+            <li>Make commitments on offer, start date, or equity</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Legal & compliance -->
+    <div style="margin-bottom:24px">
+      <div class="dd-subsection-title"><i class="ti ti-scale"></i> Legal &amp; Compliance</div>
+      <div class="dd-grid">
+        <div class="dd-panel dd-panel-dos">
+          <h4><i class="ti ti-circle-check"></i> Do</h4>
+          <ul>
+            <li>Ask job-relevant questions only</li>
+            <li>Take factual, objective notes</li>
+            <li>Conduct a right to work check at the appropriate stage</li>
+            <li>Apply an equal, consistent process for all candidates</li>
+          </ul>
+        </div>
+        <div class="dd-panel dd-panel-dont">
+          <h4><i class="ti ti-circle-x"></i> Don't</h4>
+          <ul>
+            <li>Ask about age, nationality, ethnicity, religion, or political views</li>
+            <li>Ask about family plans or pregnancy</li>
+            <li>Ask about health or disability unless a genuine occupational requirement</li>
+            <li>Record notes on appearance, accent, or personal characteristics</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- After each stage -->
+    <div>
+      <div class="dd-subsection-title"><i class="ti ti-clipboard-check"></i> After Each Stage</div>
+      <div class="dd-after-card">
+        <h4><i class="ti ti-checklist" style="color:#6366f1"></i> Post-Interview Actions</h4>
+        <ul>
+          <li>Submit your scorecard within 24 hours of the interview</li>
+          <li>Share your view before the debrief to reduce groupthink</li>
+          <li>All decisions must reference interview evidence, not gut feel</li>
+          <li>The recruiter coordinates all candidate communication — do not contact candidates directly</li>
+        </ul>
+      </div>
+    </div>
+
   </div>
 
 </div>
@@ -1241,6 +1741,7 @@ function switchTab(tab, btn) {
   document.getElementById('tab-dashboard').style.display = tab === 'dashboard' ? '' : 'none';
   document.getElementById('tab-analytics').style.display = tab === 'analytics' ? '' : 'none';
   document.getElementById('tab-joiners').style.display   = tab === 'joiners'   ? '' : 'none';
+  document.getElementById('tab-guide').style.display     = tab === 'guide'     ? '' : 'none';
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   if (tab === 'analytics') updateAnalytics();
