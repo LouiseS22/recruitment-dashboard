@@ -83,6 +83,15 @@
     .pipe-sub { font-size:.74rem; color:#94a3b8; margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .pipe-icon { font-size:1rem; flex-shrink:0; margin-top:1px; }
     .pipe-empty { text-align:center; padding:14px 0; color:#cbd5e1; font-size:.82rem; }
+    /* ── New Joiners ── */
+    .js-Confirmed     { background:#dbeafe; color:#1e40af; }
+    .js-Soon          { background:#fef3c7; color:#92400e; }
+    .js-Week          { background:#ffedd5; color:#9a3412; }
+    .js-Today         { background:#dcfce7; color:#14532d; }
+    .js-Onboarded     { background:#d1fae5; color:#065f46; }
+    .js-TBC           { background:#f1f5f9; color:#94a3b8; }
+    .joiner-kpi-grid  { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:22px; }
+
     /* ── To-do list ── */
     .todo-item { display:flex; align-items:center; gap:12px; padding:11px 0; border-bottom:1px solid #f1f5f9; }
     .todo-item:last-child { border-bottom:none; }
@@ -268,6 +277,7 @@
   <div class="tab-bar">
     <button class="tab-btn active" onclick="switchTab('dashboard',this)">Dashboard</button>
     <button class="tab-btn" onclick="switchTab('analytics',this)">Analytics</button>
+    <button class="tab-btn" onclick="switchTab('joiners',this)">New Joiners</button>
   </div>
   <div class="header-actions">
     <button class="btn btn-ghost" onclick="exportAll()">Export CSV</button>
@@ -450,6 +460,50 @@
       <table>
         <thead><tr><th>Candidate</th><th>Role</th><th>Interviewer</th><th>Duration</th><th>Rounds of Feedback</th></tr></thead>
         <tbody id="an-time-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── New Joiners Tab ── -->
+<div class="main" id="tab-joiners" style="display:none">
+
+  <div class="joiner-kpi-grid">
+    <div class="kpi">
+      <div class="kpi-label">Total Hired</div>
+      <div class="kpi-value" id="j-total">0</div>
+      <div class="kpi-sub">all time</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Starting This Month</div>
+      <div class="kpi-value" id="j-month">0</div>
+      <div class="kpi-sub" id="j-month-sub">confirmed start dates</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Starting This Week</div>
+      <div class="kpi-value" id="j-week">0</div>
+      <div class="kpi-sub">imminent joiners</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Already Started</div>
+      <div class="kpi-value" id="j-started">0</div>
+      <div class="kpi-sub">onboarded</div>
+    </div>
+  </div>
+
+  <div class="table-card">
+    <div class="table-bar">
+      <span class="table-bar-title">New Joiners</span>
+      <span style="font-size:.75rem;color:#94a3b8">Candidates are added here automatically when marked as Hired</span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>Name</th><th>Role</th><th>Hiring Manager</th>
+          <th>Start Date ✎</th><th>Time to Start</th><th>Status</th><th>Onboarding Notes ✎</th>
+        </tr></thead>
+        <tbody id="joiners-body"></tbody>
       </table>
     </div>
   </div>
@@ -1166,6 +1220,8 @@ function saveCandidate() {
     cvUrl:         document.getElementById('c-cv').value.trim(),
     notes:         document.getElementById('c-feedback').value.trim(),
     actionNeeded:  '',
+    startDate:     '',
+    joinerNotes:   '',
     feedbackHistory: []
   });
   ['c-name','c-role','c-int','c-feedback','c-email','c-phone','c-linkedin','c-cv'].forEach(id => document.getElementById(id).value='');
@@ -1184,9 +1240,11 @@ function saveInterview() {
 function switchTab(tab, btn) {
   document.getElementById('tab-dashboard').style.display = tab === 'dashboard' ? '' : 'none';
   document.getElementById('tab-analytics').style.display = tab === 'analytics' ? '' : 'none';
+  document.getElementById('tab-joiners').style.display   = tab === 'joiners'   ? '' : 'none';
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   if (tab === 'analytics') updateAnalytics();
+  if (tab === 'joiners')   renderJoiners();
 }
 
 // ── Analytics ─────────────────────────────────────────
@@ -1348,8 +1406,83 @@ function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;'
 let _tt;
 function toast(msg) { const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(_tt); _tt=setTimeout(()=>t.classList.remove('show'),1600); }
 
+// ── New Joiners ────────────────────────────────────────
+function renderJoiners() {
+  const hired   = candidates.filter(c => c.stage === 'Hired');
+  const body    = document.getElementById('joiners-body');
+  if (!body) return;
+
+  const todayStr  = new Date().toISOString().slice(0,10);
+  const todayMs   = new Date(todayStr+'T00:00:00').getTime();
+  const now       = new Date();
+  const monStart  = new Date(now.getFullYear(), now.getMonth(), 1);
+  const monEnd    = new Date(now.getFullYear(), now.getMonth()+1, 0);
+  const wkStart   = new Date(now); wkStart.setDate(now.getDate()-((now.getDay()||7)-1)); wkStart.setHours(0,0,0,0);
+  const wkEnd     = new Date(wkStart); wkEnd.setDate(wkStart.getDate()+6); wkEnd.setHours(23,59,59,999);
+
+  const inRange = (d, a, b) => d >= a && d <= b;
+  const thisMonth = hired.filter(c => c.startDate && inRange(new Date(c.startDate+'T00:00:00'), monStart, monEnd)).length;
+  const thisWeek  = hired.filter(c => c.startDate && inRange(new Date(c.startDate+'T00:00:00'), wkStart,  wkEnd)).length;
+  const started   = hired.filter(c => c.startDate && c.startDate <= todayStr).length;
+
+  const jt = document.getElementById('j-total');    if (jt) jt.textContent = hired.length;
+  const jm = document.getElementById('j-month');    if (jm) jm.textContent = thisMonth;
+  const jw = document.getElementById('j-week');     if (jw) jw.textContent = thisWeek;
+  const js = document.getElementById('j-started');  if (js) js.textContent = started;
+
+  if (!hired.length) {
+    body.innerHTML = `<tr><td colspan="7"><div class="empty"><div class="empty-icon">🎉</div><p>No hired candidates yet — mark a candidate as <strong>Hired</strong> and they'll appear here automatically</p></div></td></tr>`;
+    return;
+  }
+
+  body.innerHTML = '';
+  [...hired].sort((a,b) => {
+    if (!a.startDate && !b.startDate) return 0;
+    if (!a.startDate) return 1;
+    if (!b.startDate) return -1;
+    return a.startDate < b.startDate ? -1 : 1;
+  }).forEach(c => {
+    const tr = document.createElement('tr');
+
+    let timeLabel = '<span style="color:#cbd5e1">—</span>';
+    let statusCls = 'js-TBC', statusTxt = 'TBC';
+    let dateTxt   = '<span style="color:#cbd5e1">— click to set —</span>';
+
+    if (c.startDate) {
+      const diff = Math.round((new Date(c.startDate+'T00:00:00').getTime() - todayMs) / 86400000);
+      dateTxt = new Date(c.startDate+'T00:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+      if      (diff > 30)  { timeLabel=`In ${diff} days`;             statusCls='js-Confirmed'; statusTxt='Confirmed'; }
+      else if (diff > 7)   { timeLabel=`In ${diff} days`;             statusCls='js-Soon';      statusTxt='Starting Soon'; }
+      else if (diff > 1)   { timeLabel=`In ${diff} days`;             statusCls='js-Week';      statusTxt='This Week'; }
+      else if (diff === 1) { timeLabel='Tomorrow';                    statusCls='js-Week';      statusTxt='Tomorrow'; }
+      else if (diff === 0) { timeLabel='🎉 Today!';                   statusCls='js-Today';     statusTxt='Starting Today!'; }
+      else                 { timeLabel=`Started ${Math.abs(diff)}d ago`; statusCls='js-Onboarded'; statusTxt='Onboarded'; }
+    }
+
+    tr.innerHTML = `
+      <td>
+        <div class="name-cell">
+          <div class="av" style="background:${avColor(c.name)}">${initials(c.name)}</div>
+          <span style="font-weight:600">${esc(c.name)}</span>
+        </div>
+      </td>
+      <td style="color:#64748b;font-size:.8rem">${esc(c.role)||'—'}</td>
+      <td style="color:#64748b;font-size:.8rem">${esc(c.interviewer)||'—'}</td>
+      <td class="ed">${dateTxt}</td>
+      <td style="font-size:.82rem;color:#475569">${timeLabel}</td>
+      <td><span class="badge ${statusCls}">${statusTxt}</span></td>
+      <td class="ed">${esc(c.joinerNotes)||'<span style="color:#cbd5e1">—</span>'}</td>`;
+
+    wireEditable(tr, c, [
+      {col:3, field:'startDate',   type:'date'},
+      {col:6, field:'joinerNotes', type:'text'},
+    ]);
+    body.appendChild(tr);
+  });
+}
+
 // ── Boot ───────────────────────────────────────────────
-function refresh() { updateKPIs(); updateFunnel(); updatePipelineDetail(); updateToDoList(); updateDeptChart(); renderRoles(); renderCandidates(); renderInterviews(); }
+function refresh() { updateKPIs(); updateFunnel(); updatePipelineDetail(); updateToDoList(); updateDeptChart(); renderRoles(); renderCandidates(); renderInterviews(); renderJoiners(); }
 refresh();
 </script>
 </body>
