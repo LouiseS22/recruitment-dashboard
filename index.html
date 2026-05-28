@@ -22,6 +22,19 @@
     .btn-primary { background: #6366f1; color: white; }
     .btn-sm { padding: 5px 12px; font-size: 0.75rem; }
 
+    /* ── Tabs ── */
+    .tab-bar { display:flex; gap:4px; }
+    .tab-btn { background:rgba(255,255,255,.08); color:rgba(255,255,255,.55); border:none; border-radius:7px; padding:7px 18px; font-size:.82rem; font-weight:600; cursor:pointer; font-family:inherit; transition:all .15s; }
+    .tab-btn:hover { background:rgba(255,255,255,.15); color:rgba(255,255,255,.9); }
+    .tab-btn.active { background:rgba(255,255,255,.22); color:white; }
+
+    /* ── Analytics ── */
+    .an-rate-wrap { display:flex; align-items:center; gap:10px; margin-top:8px; }
+    .an-bar-bg { flex:1; height:6px; background:#f1f5f9; border-radius:99px; overflow:hidden; }
+    .an-bar-fill { height:100%; border-radius:99px; transition:width .4s; }
+    .conv-bar-bg { height:8px; background:#f1f5f9; border-radius:99px; overflow:hidden; flex:1; min-width:60px; }
+    .conv-bar-fill { height:100%; border-radius:99px; }
+
     /* ── Layout ── */
     .main { padding: 24px 32px; max-width: 1440px; margin: 0 auto; }
 
@@ -227,12 +240,16 @@
     <h1>Recruitment Dashboard</h1>
     <div class="sub" id="hdr-date"></div>
   </div>
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('dashboard',this)">Dashboard</button>
+    <button class="tab-btn" onclick="switchTab('analytics',this)">Analytics</button>
+  </div>
   <div class="header-actions">
     <button class="btn btn-ghost" onclick="exportAll()">Export CSV</button>
   </div>
 </header>
 
-<div class="main">
+<div class="main" id="tab-dashboard">
 
   <!-- KPIs -->
   <div class="kpi-grid">
@@ -320,6 +337,77 @@
           <tbody id="ints-body"></tbody>
         </table>
       </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── Analytics Tab ── -->
+<div class="main" id="tab-analytics" style="display:none">
+
+  <!-- KPI row -->
+  <div class="kpi-grid">
+    <div class="kpi">
+      <div class="kpi-label">Offer Accept Rate</div>
+      <div class="kpi-value" id="an-offer-val">—</div>
+      <div class="an-rate-wrap"><div class="an-bar-bg"><div class="an-bar-fill" id="an-offer-bar" style="background:#10b981;width:0%"></div></div></div>
+      <div class="kpi-sub">hired ÷ (hired + rejected + dropped out)</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Dropout Rate</div>
+      <div class="kpi-value" id="an-dropout-val">—</div>
+      <div class="an-rate-wrap"><div class="an-bar-bg"><div class="an-bar-fill" id="an-dropout-bar" style="background:#f97316;width:0%"></div></div></div>
+      <div class="kpi-sub">dropped out ÷ total candidates</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Roles Fill Rate</div>
+      <div class="kpi-value" id="an-fill-val">—</div>
+      <div class="an-rate-wrap"><div class="an-bar-bg"><div class="an-bar-fill" id="an-fill-bar" style="background:#6366f1;width:0%"></div></div></div>
+      <div class="kpi-sub">filled ÷ total roles</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Avg Interview Rounds</div>
+      <div class="kpi-value" id="an-rounds-val">—</div>
+      <div class="kpi-sub" id="an-rounds-sub">feedback entries per candidate</div>
+    </div>
+  </div>
+
+  <!-- Pipeline conversion + Role status -->
+  <div class="two-col">
+
+    <div class="table-card">
+      <div class="table-bar"><span class="table-bar-title">Pipeline Conversion</span></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Stage</th><th>Candidates</th><th>Share</th></tr></thead>
+          <tbody id="an-conv-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="table-card">
+      <div class="table-bar"><span class="table-bar-title">Roles by Status</span></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Status</th><th>Count</th><th>Share</th></tr></thead>
+          <tbody id="an-role-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Time to hire -->
+  <div class="table-card">
+    <div class="table-bar">
+      <span class="table-bar-title">Time to Hire</span>
+      <span style="font-size:.75rem;color:#94a3b8">First → last interview date for hired candidates</span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Candidate</th><th>Role</th><th>Interviewer</th><th>Duration</th><th>Rounds of Feedback</th></tr></thead>
+        <tbody id="an-time-body"></tbody>
+      </table>
     </div>
   </div>
 
@@ -973,6 +1061,116 @@ function saveInterview() {
   interviews.push({ id:uid(), name, role:document.getElementById('i-role').value.trim(), date:document.getElementById('i-date').value, interviewer:document.getElementById('i-int').value.trim(), round:document.getElementById('i-round').value });
   ['i-name','i-role','i-date','i-int'].forEach(id => document.getElementById(id).value='');
   closeModals(); save();
+}
+
+// ── Tab switching ─────────────────────────────────────
+function switchTab(tab, btn) {
+  document.getElementById('tab-dashboard').style.display = tab === 'dashboard' ? '' : 'none';
+  document.getElementById('tab-analytics').style.display = tab === 'analytics' ? '' : 'none';
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  if (tab === 'analytics') updateAnalytics();
+}
+
+// ── Analytics ─────────────────────────────────────────
+function updateAnalytics() {
+  const total      = candidates.length;
+  const hired      = candidates.filter(c => c.stage==='Hired').length;
+  const rejected   = candidates.filter(c => c.stage==='Rejected').length;
+  const droppedOut = candidates.filter(c => c.stage==='Dropped Out').length;
+  const offer      = candidates.filter(c => c.stage==='Offer').length;
+  const interview  = candidates.filter(c => c.stage==='Interview').length;
+  const screening  = candidates.filter(c => c.stage==='Screening').length;
+  const applied    = candidates.filter(c => c.stage==='Applied').length;
+  const totalRoles = roles.length;
+  const filledRoles= roles.filter(r => r.status==='Filled').length;
+
+  // ── KPIs ──
+  const closed = hired + rejected + droppedOut;
+  const offerRate  = closed > 0   ? Math.round(hired/closed*100)        : null;
+  const dropRate   = total > 0    ? Math.round(droppedOut/total*100)    : null;
+  const fillRate   = totalRoles>0 ? Math.round(filledRoles/totalRoles*100) : null;
+
+  const totalFB = candidates.reduce((s,c)=>s+(c.feedbackHistory||[]).length,0);
+  const withFB  = candidates.filter(c=>(c.feedbackHistory||[]).length>0).length;
+  const avgRounds = withFB > 0 ? (totalFB/withFB).toFixed(1) : null;
+
+  const pct = v => v !== null ? v+'%' : '—';
+  document.getElementById('an-offer-val').textContent   = pct(offerRate);
+  document.getElementById('an-dropout-val').textContent = pct(dropRate);
+  document.getElementById('an-fill-val').textContent    = pct(fillRate);
+  document.getElementById('an-rounds-val').textContent  = avgRounds !== null ? avgRounds : '—';
+  document.getElementById('an-rounds-sub').textContent  = withFB > 0 ? `across ${withFB} candidate${withFB>1?'s':''} with feedback` : 'no feedback recorded yet';
+
+  document.getElementById('an-offer-bar').style.width   = (offerRate||0)+'%';
+  document.getElementById('an-dropout-bar').style.width = (dropRate||0)+'%';
+  document.getElementById('an-fill-bar').style.width    = (fillRate||0)+'%';
+
+  // ── Pipeline conversion table ──
+  const stages = [
+    {name:'Applied',     count:applied,    color:'#6366f1'},
+    {name:'Screening',   count:screening,  color:'#3b82f6'},
+    {name:'Interview',   count:interview,  color:'#0ea5e9'},
+    {name:'Offer',       count:offer,      color:'#10b981'},
+    {name:'Hired',       count:hired,      color:'#22c55e'},
+    {name:'Rejected',    count:rejected,   color:'#ef4444'},
+    {name:'Dropped Out', count:droppedOut, color:'#f97316'},
+  ];
+  const maxCnt = Math.max(...stages.map(s=>s.count), 1);
+  document.getElementById('an-conv-body').innerHTML = stages.map(s => {
+    const barW = Math.round(s.count/maxCnt*100);
+    const sharePct = total>0 ? Math.round(s.count/total*100)+'%' : '—';
+    return `<tr>
+      <td style="padding:9px 14px;font-weight:600">${s.name}</td>
+      <td style="padding:9px 14px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="conv-bar-bg"><div class="conv-bar-fill" style="width:${barW}%;background:${s.color}"></div></div>
+          <span style="font-weight:700;font-size:.9rem;min-width:18px;text-align:right">${s.count}</span>
+        </div>
+      </td>
+      <td style="padding:9px 14px;color:#64748b;font-size:.82rem">${sharePct}</td>
+    </tr>`;
+  }).join('');
+
+  // ── Roles by status ──
+  const statusMap = {};
+  roles.forEach(r => { statusMap[r.status] = (statusMap[r.status]||0)+1; });
+  const statusRows = Object.entries(statusMap).sort((a,b)=>b[1]-a[1]);
+  document.getElementById('an-role-body').innerHTML = statusRows.length
+    ? statusRows.map(([st, cnt]) => {
+        const sharePct = totalRoles>0 ? Math.round(cnt/totalRoles*100)+'%' : '—';
+        return `<tr>
+          <td style="padding:9px 14px"><span class="badge st-${st.replace(/\s+/g,'-')}">${st}</span></td>
+          <td style="padding:9px 14px;font-weight:700">${cnt}</td>
+          <td style="padding:9px 14px;color:#64748b;font-size:.82rem">${sharePct}</td>
+        </tr>`;
+      }).join('')
+    : '<tr><td colspan="3" style="text-align:center;padding:24px;color:#cbd5e1">No roles added yet</td></tr>';
+
+  // ── Time to hire ──
+  const hiredCands = candidates.filter(c => c.stage==='Hired');
+  document.getElementById('an-time-body').innerHTML = hiredCands.length
+    ? hiredCands.map(c => {
+        const intDates = interviews.filter(i=>i.date && i.name.toLowerCase()===c.name.toLowerCase()).map(i=>i.date);
+        const fbDates  = (c.feedbackHistory||[]).filter(f=>f.date).map(f=>f.date);
+        const all      = [...intDates,...fbDates].sort();
+        let duration = '—';
+        if (all.length >= 2) {
+          const days = Math.round((new Date(all[all.length-1]+'T00:00:00') - new Date(all[0]+'T00:00:00'))/86400000);
+          duration = `<strong style="color:#6366f1">${days}</strong> days`;
+        } else if (all.length===1) {
+          duration = '<span style="color:#94a3b8">1 data point</span>';
+        }
+        const rounds = (c.feedbackHistory||[]).length;
+        return `<tr>
+          <td style="padding:9px 14px;font-weight:600">${esc(c.name)}</td>
+          <td style="padding:9px 14px;color:#64748b;font-size:.82rem">${esc(c.role)||'—'}</td>
+          <td style="padding:9px 14px;font-size:.82rem">${esc(c.interviewer)||'—'}</td>
+          <td style="padding:9px 14px">${duration}</td>
+          <td style="padding:9px 14px;font-size:.82rem;color:#64748b">${rounds} entr${rounds===1?'y':'ies'}</td>
+        </tr>`;
+      }).join('')
+    : '<tr><td colspan="5" style="text-align:center;padding:24px;color:#cbd5e1">No hired candidates yet — mark a candidate as Hired to see time-to-hire</td></tr>';
 }
 
 // ── Export ─────────────────────────────────────────────
