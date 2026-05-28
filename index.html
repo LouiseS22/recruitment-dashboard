@@ -49,6 +49,19 @@
     .funnel-exit { display:flex; align-items:center; gap:8px; padding:8px 14px; border-radius:8px; flex:1; min-width:120px; }
     .funnel-exit-n { font-size:1.4rem; font-weight:800; line-height:1; }
     .funnel-exit-lbl { font-size:.65rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; }
+    /* ── Pipeline urgency events ── */
+    .pipe-header { font-size:.68rem; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:.07em; margin:14px 0 8px; padding-top:14px; border-top:1px solid #f1f5f9; }
+    #pipeline-detail { max-height:230px; overflow-y:auto; }
+    #pipeline-detail::-webkit-scrollbar { width:4px; }
+    #pipeline-detail::-webkit-scrollbar-thumb { background:#e2e8f0; border-radius:4px; }
+    .pipe-event { display:flex; align-items:flex-start; gap:10px; padding:9px 12px; border-radius:8px; margin-bottom:5px; border:1px solid rgba(0,0,0,.05); cursor:default; }
+    .pipe-dot { width:7px; height:7px; border-radius:50%; margin-top:5px; flex-shrink:0; }
+    .pipe-body { flex:1; min-width:0; }
+    .pipe-timelabel { font-size:.67rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; }
+    .pipe-name { font-size:.845rem; font-weight:600; color:#1a2332; margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .pipe-sub { font-size:.74rem; color:#94a3b8; margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .pipe-icon { font-size:1rem; flex-shrink:0; margin-top:1px; }
+    .pipe-empty { text-align:center; padding:14px 0; color:#cbd5e1; font-size:.82rem; }
     .funnel-step { flex:1; text-align:center; padding:12px 6px 10px; border-radius:8px; }
     .funnel-arrow { display:flex; align-items:center; color:#cbd5e1; font-size:.85rem; padding:0 2px; flex-shrink:0; }
     .funnel-n { font-size:1.6rem; font-weight:800; color:white; }
@@ -251,6 +264,8 @@
       <div class="card-header"><span class="card-title">Candidate Pipeline</span></div>
       <div class="funnel" id="funnel"></div>
       <div class="funnel-exits" id="funnel-exits"></div>
+      <div class="pipe-header">Upcoming &amp; Urgent</div>
+      <div id="pipeline-detail"></div>
     </div>
     <div class="card">
       <div class="card-header"><span class="card-title">Roles by Department</span></div>
@@ -534,6 +549,84 @@ function updateFunnel() {
        <div class="funnel-exit-n" style="color:#9a3412">${droppedOut}</div>
        <div class="funnel-exit-lbl" style="color:#9a3412">Dropped Out</div>
      </div>`;
+}
+
+// ── Pipeline urgency detail ────────────────────────────
+function updatePipelineDetail() {
+  const el = document.getElementById('pipeline-detail');
+  if (!el) return;
+
+  const todayStr = new Date().toISOString().slice(0,10);
+  const todayMs  = new Date(todayStr + 'T00:00:00').getTime();
+  const events   = [];
+
+  // ── Interviews ──
+  [...interviews]
+    .filter(i => i.date)
+    .sort((a,b) => a.date < b.date ? -1 : 1)
+    .forEach(i => {
+      const diff = Math.round((new Date(i.date+'T00:00:00').getTime() - todayMs) / 86400000);
+      let urgency, timeLabel, icon;
+      if (diff < 0)       { urgency='high';   timeLabel=Math.abs(diff)+'d overdue'; icon='⚠️'; }
+      else if (diff===0)  { urgency='high';   timeLabel='Today';                    icon='📅'; }
+      else if (diff===1)  { urgency='medium'; timeLabel='Tomorrow';                 icon='📅'; }
+      else if (diff<=7)   { urgency='medium'; timeLabel=new Date(i.date+'T00:00:00').toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'}); icon='📅'; }
+      else                { urgency='low';    timeLabel=new Date(i.date+'T00:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short'}); icon='📅'; }
+      const sub = [i.role, i.round, i.interviewer ? 'with '+i.interviewer : ''].filter(Boolean).join(' · ');
+      events.push({ urgency, timeLabel, icon, name: i.name, sub, sort: diff < 0 ? -999+diff : diff });
+    });
+
+  // ── Offers pending ──
+  candidates.filter(c => c.stage === 'Offer').forEach(c => {
+    const sub = [c.role, c.interviewer ? 'with '+c.interviewer : ''].filter(Boolean).join(' · ');
+    events.push({ urgency:'high', timeLabel:'Offer Pending', icon:'🤝', name:c.name, sub, sort:-50 });
+  });
+
+  // ── Final round (not yet in interviews list) ──
+  candidates.filter(c => c.stage==='Interview' && c.interviewRound==='Final').forEach(c => {
+    const alreadyListed = interviews.some(i => i.name.toLowerCase()===c.name.toLowerCase());
+    if (!alreadyListed) {
+      const sub = [c.role, c.interviewer ? 'with '+c.interviewer : ''].filter(Boolean).join(' · ');
+      events.push({ urgency:'medium', timeLabel:'Final Round', icon:'🎯', name:c.name, sub, sort:-10 });
+    }
+  });
+
+  // ── 2nd Interview candidates ──
+  candidates.filter(c => c.stage==='Interview' && c.interviewRound==='2nd Interview').forEach(c => {
+    const alreadyListed = interviews.some(i => i.name.toLowerCase()===c.name.toLowerCase());
+    if (!alreadyListed) {
+      const sub = [c.role, c.interviewer ? 'with '+c.interviewer : ''].filter(Boolean).join(' · ');
+      events.push({ urgency:'medium', timeLabel:'2nd Interview', icon:'💬', name:c.name, sub, sort:-5 });
+    }
+  });
+
+  // ── Screening stage candidates ──
+  candidates.filter(c => c.stage==='Screening').forEach(c => {
+    events.push({ urgency:'low', timeLabel:'Screening', icon:'🔍', name:c.name, sub:c.role||'', sort:100 });
+  });
+
+  if (!events.length) {
+    el.innerHTML = '<div class="pipe-empty">No scheduled events yet — add interviews to see urgencies here</div>';
+    return;
+  }
+
+  const urgencyOrder = { high:0, medium:1, low:2 };
+  events.sort((a,b) => urgencyOrder[a.urgency] - urgencyOrder[b.urgency] || a.sort - b.sort);
+
+  const DOT = { high:'#ef4444', medium:'#f59e0b', low:'#6366f1' };
+  const BG  = { high:'#fff5f5', medium:'#fffbeb', low:'#eef2ff' };
+  const TC  = { high:'#991b1b', medium:'#92400e', low:'#3730a3' };
+
+  el.innerHTML = events.map(ev => `
+    <div class="pipe-event" style="background:${BG[ev.urgency]}">
+      <div class="pipe-dot" style="background:${DOT[ev.urgency]}"></div>
+      <div class="pipe-body">
+        <div class="pipe-timelabel" style="color:${TC[ev.urgency]}">${ev.timeLabel}</div>
+        <div class="pipe-name">${esc(ev.name)}</div>
+        ${ev.sub ? `<div class="pipe-sub">${esc(ev.sub)}</div>` : ''}
+      </div>
+      <div class="pipe-icon">${ev.icon}</div>
+    </div>`).join('');
 }
 
 // ── Dept chart ─────────────────────────────────────────
@@ -905,7 +998,7 @@ let _tt;
 function toast(msg) { const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(_tt); _tt=setTimeout(()=>t.classList.remove('show'),1600); }
 
 // ── Boot ───────────────────────────────────────────────
-function refresh() { updateKPIs(); updateFunnel(); updateDeptChart(); renderRoles(); renderCandidates(); renderInterviews(); }
+function refresh() { updateKPIs(); updateFunnel(); updatePipelineDetail(); updateDeptChart(); renderRoles(); renderCandidates(); renderInterviews(); }
 refresh();
 </script>
 </body>
