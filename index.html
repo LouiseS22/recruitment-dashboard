@@ -157,6 +157,7 @@
     .r-2nd      { background:#e0e7ff; color:#3730a3; }
     .r-Final    { background:#d1fae5; color:#065f46; }
     .r-AOB      { background:#f1f5f9; color:#475569; }
+    .cr-Recruiter { background:#f0fdf4; color:#14532d; }
     .cr-First   { background:#dbeafe; color:#1e40af; }
     .cr-2nd     { background:#e0e7ff; color:#3730a3; }
     .cr-Final   { background:#d1fae5; color:#065f46; }
@@ -431,6 +432,7 @@ async function checkPw() {
   </div>
   <div class="tab-bar">
     <button class="tab-btn active" onclick="switchTab('dashboard',this)">Dashboard</button>
+    <button class="tab-btn" onclick="switchTab('pool',this)">Talent Pool</button>
     <button class="tab-btn" onclick="switchTab('analytics',this)">Analytics</button>
     <button class="tab-btn" onclick="switchTab('joiners',this)">New Joiners</button>
     <button class="tab-btn" onclick="switchTab('guide',this)">Interview Guide</button>
@@ -541,6 +543,57 @@ async function checkPw() {
           <tbody id="ints-body"></tbody>
         </table>
       </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── Talent Pool Tab ── -->
+<div class="main" id="tab-pool" style="display:none">
+
+  <div class="kpi-grid">
+    <div class="kpi">
+      <div class="kpi-label">In Pool</div>
+      <div class="kpi-value" id="tp-total">0</div>
+      <div class="kpi-sub">candidates saved</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Hot</div>
+      <div class="kpi-value" id="tp-hot" style="color:#ef4444">0</div>
+      <div class="kpi-sub">contact soon</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Warm</div>
+      <div class="kpi-value" id="tp-warm" style="color:#f59e0b">0</div>
+      <div class="kpi-sub">check in quarterly</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Added This Month</div>
+      <div class="kpi-value" id="tp-month">0</div>
+      <div class="kpi-sub">new additions</div>
+    </div>
+  </div>
+
+  <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:13px 18px;margin-bottom:18px;display:flex;gap:18px;flex-wrap:wrap;align-items:center">
+    <span style="font-size:.72rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.06em">Warmth guide</span>
+    <span style="font-size:.78rem;color:#991b1b;background:#fee2e2;padding:2px 10px;border-radius:99px;font-weight:700">Hot — contact now</span>
+    <span style="font-size:.78rem;color:#92400e;background:#fef3c7;padding:2px 10px;border-radius:99px;font-weight:700">Warm — check in quarterly</span>
+    <span style="font-size:.78rem;color:#1e40af;background:#dbeafe;padding:2px 10px;border-radius:99px;font-weight:700">Watch — keep an eye on</span>
+    <span style="font-size:.78rem;color:#475569;background:#f1f5f9;padding:2px 10px;border-radius:99px;font-weight:700">Cold — passive, long term</span>
+  </div>
+
+  <div class="table-card">
+    <div class="table-bar">
+      <span class="table-bar-title">Talent Pool</span>
+      <button class="btn btn-primary btn-sm" onclick="openModal('pool')">+ Add to Pool</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>Name</th><th>Last Role ✎</th><th>Target Role ✎</th><th>Warmth ✎</th><th>Date Added</th><th>Notes ✎</th><th></th>
+        </tr></thead>
+        <tbody id="pool-body"></tbody>
+      </table>
     </div>
   </div>
 
@@ -1147,7 +1200,7 @@ async function checkPw() {
       <div class="fg"><label>Interview Round</label>
         <select id="c-round">
           <option value="" selected>— None —</option>
-          <option>First Interview</option><option>2nd Interview</option>
+          <option>Recruiter Screening</option><option>First Interview</option><option>2nd Interview</option>
           <option>Final</option><option>AOB</option>
         </select>
       </div>
@@ -1187,6 +1240,9 @@ async function checkPw() {
 
     <!-- Contact / Links bar -->
     <div class="d-contact-bar" id="d-contact-bar"></div>
+    <div style="display:flex;justify-content:flex-end;margin-bottom:8px;margin-top:2px">
+      <button id="d-pool-btn" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:5px 13px;font-size:.74rem;font-weight:600;color:#475569;cursor:pointer;font-family:inherit;transition:all .15s" onmouseover="this.style.background='#fef3c7';this.style.color='#92400e';this.style.borderColor='#fcd34d'" onmouseout="this.style.background='#f8fafc';this.style.color='#475569';this.style.borderColor='#e2e8f0'" onclick="addToTalentPool(detailCandidateId)">⭐ Add to Talent Pool</button>
+    </div>
 
     <!-- Action needed -->
     <div class="d-action-row">
@@ -1219,6 +1275,7 @@ async function checkPw() {
       <div class="fg-row">
         <div class="fg"><label>Round</label>
           <select id="df-round">
+            <option>Recruiter Screening</option>
             <option selected>First Interview</option>
             <option>2nd Interview</option>
             <option>Final</option>
@@ -1237,6 +1294,28 @@ async function checkPw() {
   </div>
 </div>
 
+<!-- Talent Pool Modal -->
+<div class="overlay" id="m-pool">
+  <div class="modal">
+    <h2>Add to Talent Pool</h2>
+    <div class="fg"><label>Full Name *</label><input id="tp-name" type="text" placeholder="e.g. Alex Johnson"></div>
+    <div class="fg-row">
+      <div class="fg"><label>Last / Current Role</label><input id="tp-role" type="text" placeholder="e.g. Product Manager"></div>
+      <div class="fg"><label>Target Role(s)</label><input id="tp-target" type="text" placeholder="e.g. Head of Product"></div>
+    </div>
+    <div class="fg"><label>Warmth</label>
+      <select id="tp-warmth">
+        <option>Hot</option><option selected>Warm</option><option>Watch</option><option>Cold</option>
+      </select>
+    </div>
+    <div class="fg"><label>Notes</label><textarea id="tp-notes" placeholder="Why keep warm? What roles suit them? Availability, what they're looking for…"></textarea></div>
+    <div class="modal-foot">
+      <button class="btn-cancel" onclick="closeModals()">Cancel</button>
+      <button class="btn-save" onclick="savePoolEntry()">Add to Pool</button>
+    </div>
+  </div>
+</div>
+
 <!-- Interview Modal -->
 <div class="overlay" id="m-interview">
   <div class="modal">
@@ -1250,7 +1329,7 @@ async function checkPw() {
       <div class="fg"><label>Interviewer</label><input id="i-int" type="text" placeholder="Name"></div>
       <div class="fg"><label>Round</label>
         <select id="i-round">
-          <option selected>First Interview</option><option>2nd Interview</option><option>Final</option><option>AOB</option>
+          <option>Recruiter Screening</option><option selected>First Interview</option><option>2nd Interview</option><option>Final</option><option>AOB</option>
         </select>
       </div>
     </div>
@@ -1263,15 +1342,16 @@ async function checkPw() {
 
 <script>
 // ── State ──────────────────────────────────────────────
-let roles      = [];
-let candidates = [];
-let interviews = [];
+let roles       = [];
+let candidates  = [];
+let interviews  = [];
+let talentPool  = [];
 let _id = Date.now();
 const uid = () => 'i' + (++_id);
 
 // ── Encrypted persistence ───────────────────────────
 async function _saveEncrypted() {
-  const enc = await _encrypt({ roles, candidates, interviews });
+  const enc = await _encrypt({ roles, candidates, interviews, talentPool });
   localStorage.setItem('rec_enc_v1', enc);
   // Wipe old plaintext keys if present
   ['rec_roles','rec_candidates','rec_interviews'].forEach(k => localStorage.removeItem(k));
@@ -1281,7 +1361,7 @@ async function _loadEncrypted() {
   if (enc) {
     try {
       const d = await _decrypt(enc);
-      roles = d.roles || []; candidates = d.candidates || []; interviews = d.interviews || [];
+      roles = d.roles || []; candidates = d.candidates || []; interviews = d.interviews || []; talentPool = d.talentPool || [];
       return true;
     } catch(e) { return false; }
   }
@@ -1475,9 +1555,10 @@ const OPTS = {
   rstatus:  ['Active','Screening','Interviewing','Offer Sent','Filled','On Hold','Cancelled'],
   priority: ['High','Medium','Low'],
   cstage:   ['Applied','Screening','Interview','Offer','Hired','Rejected','Dropped Out'],
-  iround:   ['First Interview','2nd Interview','Final','AOB'],
-  round:    ['First Interview','2nd Interview','Final','AOB'],
+  iround:   ['Recruiter Screening','First Interview','2nd Interview','Final','AOB'],
+  round:    ['Recruiter Screening','First Interview','2nd Interview','Final','AOB'],
   action:   ['Awaiting Feedback','Send Rejection','Send Offer','Schedule Next Round','Awaiting Decision','Follow Up'],
+  warmth:   ['Hot','Warm','Watch','Cold'],
 };
 const ACTION_STYLE = {
   'Awaiting Feedback':   {bg:'#fef3c7',fg:'#92400e'},
@@ -1857,6 +1938,7 @@ function saveInterview() {
 // ── Tab switching ─────────────────────────────────────
 function switchTab(tab, btn) {
   document.getElementById('tab-dashboard').style.display = tab === 'dashboard' ? '' : 'none';
+  document.getElementById('tab-pool').style.display      = tab === 'pool'      ? '' : 'none';
   document.getElementById('tab-analytics').style.display = tab === 'analytics' ? '' : 'none';
   document.getElementById('tab-joiners').style.display   = tab === 'joiners'   ? '' : 'none';
   document.getElementById('tab-guide').style.display     = tab === 'guide'     ? '' : 'none';
@@ -1864,6 +1946,7 @@ function switchTab(tab, btn) {
   btn.classList.add('active');
   if (tab === 'analytics') updateAnalytics();
   if (tab === 'joiners')   renderJoiners();
+  if (tab === 'pool')      renderTalentPool();
 }
 
 // ── Analytics ─────────────────────────────────────────
@@ -2121,8 +2204,99 @@ function renderJoiners() {
   });
 }
 
+// ── Talent Pool ────────────────────────────────────────
+const WARMTH_STYLE = {
+  'Hot':   { bg:'#fee2e2', fg:'#991b1b' },
+  'Warm':  { bg:'#fef3c7', fg:'#92400e' },
+  'Watch': { bg:'#dbeafe', fg:'#1e40af' },
+  'Cold':  { bg:'#f1f5f9', fg:'#475569' },
+};
+const WARMTH_ORDER = { Hot:0, Warm:1, Watch:2, Cold:3 };
+
+function renderTalentPool() {
+  const body = document.getElementById('pool-body');
+  if (!body) return;
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0,10);
+  const tTotal = document.getElementById('tp-total'); if (tTotal) tTotal.textContent = talentPool.length;
+  const tHot   = document.getElementById('tp-hot');   if (tHot)   tHot.textContent   = talentPool.filter(p => p.warmth === 'Hot').length;
+  const tWarm  = document.getElementById('tp-warm');  if (tWarm)  tWarm.textContent  = talentPool.filter(p => p.warmth === 'Warm').length;
+  const tMonth = document.getElementById('tp-month'); if (tMonth) tMonth.textContent = talentPool.filter(p => (p.addedDate||'') >= monthStart).length;
+  if (!talentPool.length) {
+    body.innerHTML = `<tr><td colspan="7"><div class="empty"><div class="empty-icon">⭐</div><p>No candidates saved yet — use <strong>+ Add to Pool</strong> or open a candidate profile and click <strong>Add to Talent Pool</strong></p></div></td></tr>`;
+    return;
+  }
+  body.innerHTML = '';
+  [...talentPool]
+    .sort((a,b) => (WARMTH_ORDER[a.warmth]??2) - (WARMTH_ORDER[b.warmth]??2) || (a.addedDate < b.addedDate ? 1 : -1))
+    .forEach(p => {
+      const tr = document.createElement('tr');
+      const ws = WARMTH_STYLE[p.warmth] || WARMTH_STYLE['Watch'];
+      tr.innerHTML = `
+        <td>
+          <div class="name-cell">
+            <div class="av" style="background:${avColor(p.name)}">${initials(p.name)}</div>
+            <span style="font-weight:600">${esc(p.name)}</span>
+          </div>
+        </td>
+        <td class="ed" style="color:#64748b;font-size:.82rem">${esc(p.role)||'<span style="color:#cbd5e1">—</span>'}</td>
+        <td class="ed" style="font-size:.82rem">${esc(p.targetRole)||'<span style="color:#cbd5e1">—</span>'}</td>
+        <td class="ed"><span class="badge" style="background:${ws.bg};color:${ws.fg}">${p.warmth||'Watch'}</span></td>
+        <td style="font-size:.78rem;color:#94a3b8">${p.addedDate ? new Date(p.addedDate+'T00:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : '—'}</td>
+        <td class="ed" style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.8rem;color:#475569">${esc(p.notes)||'<span style="color:#cbd5e1">—</span>'}</td>
+        <td><button class="row-del" data-id="${p.id}">×</button></td>`;
+      wireEditable(tr, p, [
+        {col:1, field:'role',       type:'text'},
+        {col:2, field:'targetRole', type:'text'},
+        {col:3, field:'warmth',     type:'warmth'},
+        {col:5, field:'notes',      type:'text'},
+      ]);
+      tr.querySelector('.row-del').addEventListener('click', function(e) {
+        e.stopPropagation();
+        if (!confirm('Remove from talent pool?')) return;
+        talentPool = talentPool.filter(x => x.id !== p.id);
+        save();
+      });
+      body.appendChild(tr);
+    });
+}
+
+function addToTalentPool(candidateId) {
+  const c = candidates.find(x => x.id === candidateId);
+  if (!c) return;
+  if (talentPool.some(p => p.linkedId === candidateId)) {
+    toast('Already in talent pool ⭐');
+    return;
+  }
+  talentPool.push({
+    id: uid(), linkedId: candidateId,
+    name: c.name, role: c.role,
+    targetRole: '', warmth: 'Warm',
+    addedDate: new Date().toISOString().slice(0,10),
+    notes: c.notes || '',
+  });
+  save();
+  toast('Added to Talent Pool ⭐');
+}
+
+function savePoolEntry() {
+  const name = document.getElementById('tp-name').value.trim();
+  if (!name) { alert('Please enter a name.'); return; }
+  talentPool.push({
+    id: uid(), linkedId: null, name,
+    role:       document.getElementById('tp-role').value.trim(),
+    targetRole: document.getElementById('tp-target').value.trim(),
+    warmth:     document.getElementById('tp-warmth').value || 'Warm',
+    addedDate:  new Date().toISOString().slice(0,10),
+    notes:      document.getElementById('tp-notes').value.trim(),
+  });
+  ['tp-name','tp-role','tp-target','tp-notes'].forEach(id => document.getElementById(id).value = '');
+  closeModals();
+  save();
+}
+
 // ── Boot ───────────────────────────────────────────────
-function refresh() { updateKPIs(); updateFunnel(); updatePipelineDetail(); updateToDoList(); updateDeptChart(); renderRoles(); renderCandidates(); renderInterviews(); renderJoiners(); }
+function refresh() { updateKPIs(); updateFunnel(); updatePipelineDetail(); updateToDoList(); updateDeptChart(); renderRoles(); renderCandidates(); renderInterviews(); renderJoiners(); renderTalentPool(); }
 </script>
 </body>
 </html>
